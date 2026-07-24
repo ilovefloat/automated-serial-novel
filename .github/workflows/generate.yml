@@ -9,8 +9,8 @@ on:
         default: false
         type: boolean
   schedule:
-    # UTC 토요일 18:00 = KST 일요일 03:00
-    - cron: "0 18 * * 6"
+    # UTC 13:00 = KST 22:00
+    - cron: "0 13 * * *"
 
 permissions:
   contents: write

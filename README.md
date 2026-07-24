@@ -29,7 +29,7 @@ AI를 악당이나 자아를 얻은 존재로 만들지 않는다. 자동화의 
 - `state/model_catalog.json`: 실행 시 조회된 생성 모델과 선택 결과
 - `docs/episodes/`: 공개 Markdown 원고
 - `docs/index.html`, `docs/episode.html`: GitHub Pages 연재 화면
-- `.github/workflows/generate.yml`: 수동·주간 생성과 커밋
+- `.github/workflows/generate.yml`: 수동·일일 생성과 커밋
 - `tests/`: API 호출이 없는 단위 테스트
 
 프롬프트에는 최근 20편의 압축 요약·서사 지문, 최대 60개의 확정 사실, 현재
@@ -38,7 +38,7 @@ AI를 악당이나 자아를 얻은 존재로 만들지 않는다. 자동화의 
 
 ## 게시 단위와 서사 단위
 
-매주 예약 실행은 실제 게시 주기일 뿐 작품 내부 시간의 단위가 아니다. 이
+매일 예약 실행은 실제 게시 주기일 뿐 작품 내부 시간의 단위가 아니다. 이
 작품은 일간 단편집이 아니라 하나의 연속 장편소설이다. 한 사건, 하루, 대화,
 노동 장면은 여러 화에 걸쳐 이어질 수 있고 한 화 안에서 며칠이 지날 수도 있다.
 진행 중인 장면은 `current_scene`, `current_scene_started_episode`,
@@ -121,8 +121,8 @@ Workflow permissions**에서 `Read and write permissions`를 선택한다. 조�
 
 ### 예약 실행
 
-매주 **일요일 오전 3시(한국 표준시, KST/UTC+9)**에 한 편을 생성한다.
-워크플로 cron은 UTC 기준 토요일 18시인 `0 18 * * 6`이다. GitHub Actions의
+매일 **오후 10시(한국 표준시, KST/UTC+9)**에 한 편을 생성한다.
+워크플로 cron은 UTC 기준 오후 1시인 `0 13 * * *`이다. GitHub Actions의
 예약 작업은 부하에 따라 실제 시작이 지연될 수 있다.
 
 정상 실행은 다음 파일을 커밋하고 `origin/main`에 push한다.
