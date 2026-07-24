@@ -1,6 +1,6 @@
 {
   "series_title": "승인되지 않은 문장",
-  "next_episode": 1,
+  "next_episode": 2,
   "protagonist": {
     "name": "",
     "occupation": [
@@ -10,29 +10,47 @@
     "dream": "소설가",
     "condition": "생계와 수면 부족 때문에 직접 글을 쓸 시간이 거의 없다"
   },
-  "summary": "연재 시작 전",
-  "history": [],
-  "protagonist_changes": [],
-  "new_facts": [],
+  "summary": "새벽 청소 노동을 마치고 지하 자취방으로 돌아온 주인공이, 잠시 쉴 겨를도 없이 AI 승인 플랫폼의 대기 화면을 마주하며 두 번째 노동을 준비하는 과정",
+  "history": [
+    {
+      "episode": 1,
+      "title": "회색 빛의 간격",
+      "summary": "새벽 청소 노동을 마치고 지하 자취방으로 돌아온 주인공이, 잠시 쉴 겨를도 없이 AI 승인 플랫폼의 대기 화면을 마주하며 두 번째 노동을 준비하는 과정",
+      "narrative_pace": "일상 축적"
+    }
+  ],
+  "protagonist_changes": [
+    "신체적 피로와 관절의 통증을 체감함",
+    "휴식 시간 없이 바로 두 번째 노동으로 진입함"
+  ],
+  "new_facts": [
+    "청소 노동 직후 지하 자취방에서 곧바로 AI 승인 플랫폼에 접속함",
+    "승인 건수는 45건이며 건당 삼백 원의 수수료를 받음"
+  ],
   "open_threads": [
     "주인공은 자신의 삶을 사회고발 소설로 기록하려 한다.",
-    "그는 AI의 도움 없이는 글을 완성하기 어렵다는 사실을 알고 있다."
+    "그는 AI의 도움 없이는 글을 완성하기 어렵다는 사실을 알고 있다.",
+    "AI의 도움 없이는 글을 완성하기 어렵다는 사실을 알고 있다."
   ],
-  "continuity_notes": [],
-  "next_episode_pressure": "첫 노동 현장의 구체적 장면에서 시작하되 AI 집필은 장면 흐름이 필요할 때만 이어간다.",
+  "continuity_notes": [
+    "다음 화는 스마트폰 화면 속 첫 번째 문서를 읽는 지점부터 정확히 이어서 작성한다."
+  ],
+  "next_episode_pressure": "밀려드는 피로 속에서 최소한의 생계를 위해 첫 번째 승인 문서를 검토해야 하는 압박",
   "narrative_mode": "일반적인 1인칭 서술",
   "narrative_pace": "일상 축적",
-  "current_scene": "",
-  "current_scene_started_episode": null,
+  "current_scene": "지하 자취방 매트리스 위",
+  "current_scene_started_episode": 1,
   "active_arc": "생계와 부채",
   "supporting_arcs": [],
   "arc_states": {
     "생계와 부채": {
-      "current_stage": "미진행",
-      "last_progress_episode": null,
-      "next_possible_change": "첫 급여와 필수 지출의 차이를 구체화한다.",
-      "withheld_information": [],
-      "current_pressure": "수면을 줄여 두 종류의 일을 병행해야 한다.",
+      "current_stage": "초기 압박 확인",
+      "last_progress_episode": 1,
+      "next_possible_change": "첫 번째 승인 문서에서 구체적인 책임 조항과 비용 문제를 마주한다.",
+      "withheld_information": [
+        "구체적인 부채 총액과 월세 액수"
+      ],
+      "current_pressure": "수면을 포기해야만 생계유지가 가능한 시간적 압박",
       "long_term_outcome": "생존 비용이 집필 선택을 어떻게 바꾸는지 누적한다.",
       "on_hold": false
     },
@@ -136,15 +154,82 @@
       "on_hold": true
     }
   },
-  "recent_scene_fingerprints": [],
-  "recent_opening_patterns": [],
-  "recent_ending_patterns": [],
-  "recent_locations": [],
-  "recent_character_combinations": [],
-  "recent_conflict_types": [],
-  "recent_social_themes": [],
-  "recent_document_formats": [],
-  "recent_ai_interaction_types": [],
+  "recent_scene_fingerprints": [
+    {
+      "episode": 1,
+      "locations": [
+        "자동화 물류센터",
+        "지하 자취방"
+      ],
+      "character_combination": [
+        "주인공"
+      ],
+      "central_labor": "자동화 시설 청소 노동 및 승인 플랫폼 대기",
+      "conflict_type": [
+        "개인의 신체적 한계와 생존을 위한 시간 부족 사이의 갈등"
+      ],
+      "social_theme": [
+        "투잡 노동자의 극단적인 수면 부족과 노동 환경",
+        "자동화 잔여 영역에서의 저임금 인간 노동"
+      ],
+      "document_format": [
+        "일반 1인칭 서술",
+        "플랫폼 인터페이스 알림"
+      ],
+      "ai_interaction_type": [
+        "플랫폼 접속 대기 및 시스템 알림 확인"
+      ],
+      "emotional_start": "신체적 피로와 무감각",
+      "emotional_end": "강박적인 긴장과 체념",
+      "opening_pattern": "신체적 감각과 시간 감각에 대한 묘사로 시작",
+      "ending_pattern": "다음 노동으로 이어지는 긴장 속의 암전",
+      "core_images": [
+        "퉁퉁 불은 손끝과 검은 기름때",
+        "어두운 방 안에서 스마트폰 화면의 백색광이 비치는 얼굴"
+      ],
+      "core_sentence_structure": "노동의 물질적 감각을 서술한 뒤 스마트폰 화면의 차가운 백색광으로 시선을 이동시키는 구조",
+      "revealed_information": [
+        "주인공의 거주 환경(지하 자취방, 곰팡이 냄새, 보일러 미작동)",
+        "청소 노동 직후 곧바로 AI 승인 플랫폼에 접속해야 하는 스케줄"
+      ],
+      "new_questions": [
+        "주인공이 검토해야 하는 45건의 문서에는 어떤 내용이 담겨 있는가?"
+      ],
+      "resolved_threads": [],
+      "twist_type": "없음",
+      "narrative_function": "주인공의 처지와 이중 노동의 현실을 독자에게 각인",
+      "narrative_pace": "일상 축적"
+    }
+  ],
+  "recent_opening_patterns": [
+    "신체적 감각과 시간 감각에 대한 묘사로 시작"
+  ],
+  "recent_ending_patterns": [
+    "다음 노동으로 이어지는 긴장 속의 암전"
+  ],
+  "recent_locations": [
+    "자동화 물류센터",
+    "지하 자취방"
+  ],
+  "recent_character_combinations": [
+    [
+      "주인공"
+    ]
+  ],
+  "recent_conflict_types": [
+    "개인의 신체적 한계와 생존을 위한 시간 부족 사이의 갈등"
+  ],
+  "recent_social_themes": [
+    "투잡 노동자의 극단적인 수면 부족과 노동 환경",
+    "자동화 잔여 영역에서의 저임금 인간 노동"
+  ],
+  "recent_document_formats": [
+    "일반 1인칭 서술",
+    "플랫폼 인터페이스 알림"
+  ],
+  "recent_ai_interaction_types": [
+    "플랫폼 접속 대기 및 시스템 알림 확인"
+  ],
   "motif_cooldowns": {
     "major_accident": {
       "remaining": 0,
@@ -189,11 +274,29 @@
   },
   "last_major_event_episode": null,
   "last_major_reveal_episode": null,
-  "unresolved_immediate_actions": [],
-  "next_required_connection": "",
-  "withheld_information": [],
-  "planned_long_term_reveals": [],
-  "recurring_symbols": [],
-  "symbol_meaning_history": [],
-  "narrative_repetition_warnings": []
+  "unresolved_immediate_actions": [
+    "첫 번째 승인 문서를 열어 내용을 확인한다."
+  ],
+  "next_required_connection": "첫 번째 승인 문서를 읽고 검토하는 구체적 행위로 바로 이어간다.",
+  "withheld_information": [
+    "주인공의 구체적인 부채 총액"
+  ],
+  "planned_long_term_reveals": [
+    "승인 문서의 내용이 현실의 사건과 어떻게 연결되는지 후반부에 공개"
+  ],
+  "recurring_symbols": [
+    "스마트폰의 백색광"
+  ],
+  "symbol_meaning_history": [
+    {
+      "episode": 1,
+      "symbol": "스마트폰의 백색광",
+      "meaning": "휴식을 차단하고 노동을 강제하는 차가운 기술의 시선",
+      "development": "첫 등장에서 피로한 얼굴을 비추는 물리적 광원으로 구체화됨"
+    }
+  ],
+  "narrative_repetition_warnings": [
+    "반복적인 피로 묘사의 과다 사용 주의"
+  ],
+  "last_generated_at": "2026-07-24T13:41:27.395249+00:00"
 }

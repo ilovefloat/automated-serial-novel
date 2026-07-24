@@ -1,4 +1,11 @@
 {
   "series_title": "승인되지 않은 문장",
-  "episodes": []
+  "episodes": [
+    {
+      "episode": 1,
+      "title": "회색 빛의 간격",
+      "date": "2026-07-24",
+      "file": "episodes/001.md"
+    }
+  ]
 }
