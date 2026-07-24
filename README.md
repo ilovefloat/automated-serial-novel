@@ -121,24 +121,42 @@ macOS/Linux에서는 `export GEMINI_API_KEY="..."` 형식을 사용한다.
 ## 모델 자동 선택
 
 매 실행마다 공식 `google-genai` SDK의 `client.models.list()`를 호출한다.
-각 모델의 `supported_actions`에 `generateContent`가 명시된 모델만 후보가 된다.
+각 모델의 `supported_actions`에 `generateContent`가 명시되어 있어야 후보가
+되지만, 목록에 있다는 사실만으로 실제 사용 가능하다고 판단하지 않는다.
+에피소드를 생성하기 전에 후보마다 짧은 입력과 출력 토큰 1개의 저비용
+`generateContent` probe를 실행하며, 실제 호출에 성공한 첫 모델만 선택한다.
 
-1. `GEMINI_MODEL`이 있으면 후보 목록에 실제로 존재하는지 검증하고, 없으면
-   영구 오류로 종료한다.
-2. 변수가 없으면 코드의 `PREFERRED_MODELS` 순서대로 선택한다.
-3. 우선 모델이 모두 없으면 임베딩·이미지·음성·live 계열을 제외한다.
-4. stable 모델을 preview/experimental보다 우선하고, Flash, Pro, 그 밖의
-   텍스트 모델 순으로 선택한다.
-5. 마지막 동률은 모델명 사전순으로 결정한다.
+기본 stable 우선순위는 다음과 같다.
 
-API의 목록 반환 순서는 선택에 영향을 주지 않는다. 선택 모델, 우선순위,
-사용 가능한 `generateContent` 모델 전체는 로그와
-`state/model_catalog.json` 또는 preview catalog에 기록된다.
+1. `gemini-3.5-flash`
+2. `gemini-3.5-flash-lite`
+3. `gemini-3.1-flash-lite`
+
+이 세 모델이 없거나 실제 probe에 실패하면 `gemini-flash-latest`,
+`gemini-flash-lite-latest` alias를 순서대로 검사한다. 그 뒤 이름에서 식별한
+다른 stable Flash 계열을 버전 내림차순으로 검사하고, 마지막에만
+preview/experimental 모델을 검사한다. API의 목록 반환 순서는 선택에 영향을
+주지 않는다.
+
+이미지, TTS, robotics, computer-use, deep-research, Lyria, nano-banana,
+antigravity, embedding, audio/live 계열은 자동 fallback에서 제외한다.
+`GEMINI_MODEL`이 있으면 먼저 목록과 `generateContent` 지원 여부를 확인하고
+probe한다. 명시 모델이 없거나 404/403/접근 불가이면 경고 후 동일한 자동
+fallback을 계속한다.
+
+로그에는 각 probe의 성공·실패 모델, 상태 코드와 비밀값을 제거한 사유를 남긴다.
+`state/model_catalog.json` 또는 preview catalog에는 `listed_models`,
+`generate_content_models`, `probe_succeeded_models`, `probe_failed_models`,
+`selected_model`을 분리해 기록한다.
 
 ## 오류 처리
 
-- `429`, timeout, 연결 오류, `5xx`는 최대 3회만 지수 간격으로 재시도한다.
-- 잘못된 API 키, 사용할 수 없는 지정 모델, 기타 영구 오류는 즉시 종료한다.
+- probe의 `404 NOT_FOUND`, `403 PERMISSION_DENIED`, 모델 비호환
+  `400 INVALID_ARGUMENT`는 해당 후보만 제외하고 다음 후보를 검사한다.
+- `429 RESOURCE_EXHAUSTED`, timeout, 연결 오류, `500`, `502`, `503`, `504`는
+  같은 후보에서 최대 3회만 지수 간격으로 재시도한다. 계속 실패하면 모델
+  부재로 오판해 다른 후보를 고르지 않고 상태 코드가 포함된 오류로 종료한다.
+- 잘못된 API 키와 probe로 분류할 수 없는 영구 오류는 즉시 종료한다.
 - 빈 응답, JSON 오류, 짧은 본문, 코드펜스 오염, 잘못된 제목, 상태 필드·타입
   오류는 한 번만 다시 생성하며, 다시 실패하면 파일을 공개하지 않는다.
 - 기존 에피소드 파일은 덮어쓰지 않는다. 상태의 `next_episode`와 실제 파일
@@ -150,8 +168,8 @@ API의 목록 반환 순서는 선택에 영향을 주지 않는다. 선택 모�
 
 1. Actions 로그에서 `GEMINI_API_KEY 환경변수가 없습니다`가 나오면 secret의
    이름과 저장소 범위를 확인한다.
-2. `GEMINI_MODEL ... 사용할 수 없습니다`가 나오면 variable을 지우고 자동
-   선택을 사용하거나 catalog의 모델명으로 바꾼다.
+2. 명시한 `GEMINI_MODEL`의 probe가 실패하면 로그의 경고와 catalog의
+   `probe_failed_models`를 확인한다. 자동 fallback은 계속 진행된다.
 3. `state`와 `files` 번호 불일치는 누락·중복된 `docs/episodes/*.md`와
    `state/story_state.json`의 `next_episode`를 함께 확인한다.
 4. API rate limit이 반복되면 잠시 뒤 수동 실행한다. 워크플로는 무한 재시도하지

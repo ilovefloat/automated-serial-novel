@@ -26,15 +26,19 @@ MAX_ATTEMPTS = 3
 MAX_RESPONSE_ATTEMPTS = 2
 MAX_HISTORY_ITEMS = 20
 MAX_FACT_ITEMS = 60
+PROBE_MAX_OUTPUT_TOKENS = 1
 
 # 이름 목록의 반환 순서와 무관하게, 실제 사용 가능한 모델 중 이 순서로 선택한다.
 PREFERRED_MODELS = (
-    "gemini-2.5-flash",
-    "gemini-2.5-pro",
-    "gemini-2.5-flash-lite",
-    "gemini-2.0-flash",
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-flash-latest",
+    "gemini-flash-lite-latest",
 )
-UNSTABLE_MODEL_MARKERS = ("preview", "experimental", "-exp", "latest")
+STABLE_PREFERRED_MODELS = PREFERRED_MODELS[:3]
+LATEST_PREFERRED_MODELS = PREFERRED_MODELS[3:]
+PREVIEW_MODEL_MARKERS = ("preview", "experimental", "-exp")
 EXCLUDED_FALLBACK_MARKERS = (
     "embedding",
     "imagen",
@@ -42,9 +46,48 @@ EXCLUDED_FALLBACK_MARKERS = (
     "tts",
     "audio",
     "live",
+    "robotics",
+    "computer-use",
+    "deep-research",
+    "lyria",
+    "nano-banana",
+    "antigravity",
+)
+MODEL_ACCESS_MESSAGE_MARKERS = (
+    "no longer available",
+    "not available",
+    "not found",
+    "permission denied",
+    "access denied",
+    "access is restricted",
+    "does not have access",
+    "not supported for generatecontent",
+    "not supported for generate_content",
+)
+MODEL_INCOMPATIBLE_MESSAGE_MARKERS = (
+    "model is not supported",
+    "model does not support",
+    "unsupported model",
+    "incompatible model",
+    "invalid model",
+    "generatecontent is not supported",
+    "generate_content is not supported",
+    "not supported for generate_content",
 )
 
 T = TypeVar("T")
+
+
+class ModelProbeError(RuntimeError):
+    def __init__(
+        self,
+        message: str,
+        failed_models: list[dict[str, Any]],
+        succeeded_models: list[str] | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.failed_models = failed_models
+        self.succeeded_models = succeeded_models or []
 
 
 def utc_now() -> datetime:
@@ -121,16 +164,14 @@ def normalize_model_name(name: str) -> str:
     return name.strip().removeprefix("models/")
 
 
-def list_generation_models(client: genai.Client) -> list[dict[str, Any]]:
-    """Return models exposed to this key that explicitly support generateContent."""
+def list_models(client: genai.Client) -> list[dict[str, Any]]:
+    """Return the complete model catalog exposed to the current API key."""
     catalog: list[dict[str, Any]] = []
     for model in client.models.list():
         raw_name = getattr(model, "name", None)
         if not raw_name:
             continue
         supported_actions = list(getattr(model, "supported_actions", None) or [])
-        if "generateContent" not in supported_actions:
-            continue
         catalog.append(
             {
                 "name": normalize_model_name(raw_name),
@@ -143,65 +184,257 @@ def list_generation_models(client: genai.Client) -> list[dict[str, Any]]:
     return sorted(catalog, key=lambda item: item["name"])
 
 
-def select_model(
+def generation_models(catalog: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        item
+        for item in catalog
+        if "generateContent" in item.get("supported_actions", [])
+    ]
+
+
+def list_generation_models(client: genai.Client) -> list[dict[str, Any]]:
+    """Compatibility helper used by tests and callers needing one filtered list."""
+    return generation_models(list_models(client))
+
+
+def is_automatic_text_candidate(name: str) -> bool:
+    lowered = name.lower()
+    if any(marker in lowered for marker in EXCLUDED_FALLBACK_MARKERS):
+        return False
+    if re.search(r"gemini-.*-image(?:-|$)", lowered):
+        return False
+    return True
+
+
+def fallback_model_key(name: str) -> tuple[int, int, int, str]:
+    lowered = name.lower()
+    version = re.search(r"gemini-(\d+)(?:\.(\d+))?", lowered)
+    major = int(version.group(1)) if version else 0
+    minor = int(version.group(2) or 0) if version else 0
+    family_rank = 0 if "flash" in lowered else 1 if "pro" in lowered else 2
+    return family_rank, -major, -minor, name
+
+
+def ordered_model_candidates(
     catalog: list[dict[str, Any]], configured: str | None = None
-) -> str:
-    available = {item["name"] for item in catalog}
-    if not available:
-        raise RuntimeError(
-            "현재 API 키로 generateContent를 지원하는 모델을 찾지 못했습니다."
+) -> tuple[list[str], list[dict[str, Any]]]:
+    generate_names = {item["name"] for item in generation_models(catalog)}
+    listed_names = {item["name"] for item in catalog}
+    candidates: list[str] = []
+    initial_failures: list[dict[str, Any]] = []
+
+    requested = normalize_model_name(configured) if configured and configured.strip() else ""
+    if requested:
+        if requested in generate_names:
+            candidates.append(requested)
+        else:
+            status = "UNSUPPORTED_ACTION" if requested in listed_names else "NOT_LISTED"
+            failure = {
+                "name": requested,
+                "status_code": status,
+                "reason": (
+                    "models.list()에 있지만 generateContent를 지원하지 않음"
+                    if status == "UNSUPPORTED_ACTION"
+                    else "models.list()에 없음"
+                ),
+            }
+            initial_failures.append(failure)
+            print(
+                f"경고: GEMINI_MODEL {requested!r} 검증 실패 "
+                f"({failure['status_code']}): {failure['reason']}; 자동 fallback을 시도합니다.",
+                file=sys.stderr,
+            )
+
+    automatic = {
+        name for name in generate_names if is_automatic_text_candidate(name)
+    }
+    stable_priority = [
+        name for name in STABLE_PREFERRED_MODELS if name in automatic
+    ]
+    latest_priority = [
+        name for name in LATEST_PREFERRED_MODELS if name in automatic
+    ]
+    priority_names = set(PREFERRED_MODELS)
+    other_names = automatic - priority_names
+    other_stable = sorted(
+        (
+            name
+            for name in other_names
+            if "latest" not in name.lower()
+            and not any(marker in name.lower() for marker in PREVIEW_MODEL_MARKERS)
+        ),
+        key=fallback_model_key,
+    )
+    other_latest = sorted(
+        (
+            name
+            for name in other_names
+            if "latest" in name.lower()
+            and not any(marker in name.lower() for marker in PREVIEW_MODEL_MARKERS)
+        ),
+        key=fallback_model_key,
+    )
+    preview = sorted(
+        (
+            name
+            for name in other_names
+            if any(marker in name.lower() for marker in PREVIEW_MODEL_MARKERS)
+        ),
+        key=fallback_model_key,
+    )
+
+    for name in (
+        stable_priority
+        + latest_priority
+        + other_stable
+        + other_latest
+        + preview
+    ):
+        if name not in candidates:
+            candidates.append(name)
+    return candidates, initial_failures
+
+
+def error_status_code(exc: BaseException) -> int | None:
+    for attribute in ("status_code", "code"):
+        value = getattr(exc, attribute, None)
+        if isinstance(value, int):
+            return value
+        if isinstance(value, str) and value.isdigit():
+            return int(value)
+    match = re.search(r"\b(400|403|404|408|429|500|502|503|504)\b", str(exc))
+    return int(match.group(1)) if match else None
+
+
+def safe_error_reason(exc: BaseException, limit: int = 300) -> str:
+    reason = " ".join(str(exc).split())
+    secret = os.environ.get("GEMINI_API_KEY") or ""
+    if secret:
+        reason = reason.replace(secret, "[REDACTED]")
+    reason = re.sub(r"AIza[0-9A-Za-z_-]{20,}", "[REDACTED]", reason)
+    return reason[:limit] or exc.__class__.__name__
+
+
+def is_model_unavailable_error(exc: BaseException) -> bool:
+    status = error_status_code(exc)
+    lowered = str(exc).lower()
+    return status in {403, 404} or any(
+        marker in lowered for marker in MODEL_ACCESS_MESSAGE_MARKERS
+    )
+
+
+def is_model_incompatible_error(exc: BaseException) -> bool:
+    if error_status_code(exc) != 400:
+        return False
+    lowered = str(exc).lower()
+    return any(marker in lowered for marker in MODEL_INCOMPATIBLE_MESSAGE_MARKERS)
+
+
+def probe_model(
+    client: genai.Client,
+    model: str,
+    sleep: Callable[[float], None] = time.sleep,
+) -> None:
+    call_with_retry(
+        lambda: client.models.generate_content(
+            model=model,
+            contents="Reply OK.",
+            config=types.GenerateContentConfig(
+                temperature=0.0,
+                max_output_tokens=PROBE_MAX_OUTPUT_TOKENS,
+            ),
+        ),
+        f"모델 probe {model}",
+        sleep=sleep,
+    )
+
+
+def probe_and_select_model(
+    client: genai.Client,
+    catalog: list[dict[str, Any]],
+    configured: str | None = None,
+    sleep: Callable[[float], None] = time.sleep,
+) -> tuple[str, list[str], list[dict[str, Any]]]:
+    candidates, failures = ordered_model_candidates(catalog, configured)
+    if not generation_models(catalog):
+        raise ModelProbeError(
+            "models.list()에서 generateContent 지원 모델을 찾지 못했습니다.",
+            failures,
+        )
+    if not candidates:
+        raise ModelProbeError(
+            "소설 텍스트 생성에 적합한 probe 후보를 찾지 못했습니다.",
+            failures,
         )
 
-    if configured and configured.strip():
-        requested = normalize_model_name(configured)
-        if requested not in available:
-            names = ", ".join(sorted(available))
-            raise RuntimeError(
-                f"설정된 GEMINI_MODEL {requested!r}을 현재 사용할 수 없습니다. "
-                f"사용 가능한 generateContent 모델: {names}"
+    for model in candidates:
+        print(f"모델 probe 시작: {model}")
+        try:
+            probe_model(client, model, sleep=sleep)
+        except Exception as exc:
+            status = error_status_code(exc)
+            failure = {
+                "name": model,
+                "status_code": status or "UNKNOWN",
+                "reason": safe_error_reason(exc),
+            }
+            failures.append(failure)
+            print(
+                f"모델 probe 실패: {model} "
+                f"status={failure['status_code']} reason={failure['reason']}",
+                file=sys.stderr,
             )
-        return requested
+            if is_transient_error(exc):
+                raise ModelProbeError(
+                    f"모델 probe의 일시적 오류가 재시도 후에도 계속되었습니다: "
+                    f"{model} status={status or 'UNKNOWN'}",
+                    failures,
+                ) from exc
+            if is_model_unavailable_error(exc) or is_model_incompatible_error(exc):
+                if configured and model == normalize_model_name(configured):
+                    print(
+                        f"경고: GEMINI_MODEL {model!r}을 실제 호출할 수 없어 "
+                        "자동 fallback을 시도합니다.",
+                        file=sys.stderr,
+                    )
+                continue
+            raise ModelProbeError(
+                f"모델 probe 중 복구할 수 없는 오류가 발생했습니다: "
+                f"{model} status={status or 'UNKNOWN'}",
+                failures,
+            ) from exc
+        print(f"모델 probe 성공: {model}")
+        return model, [model], failures
 
-    for preferred in PREFERRED_MODELS:
-        if preferred in available:
-            return preferred
-
-    usable = [
-        name
-        for name in available
-        if not any(marker in name.lower() for marker in EXCLUDED_FALLBACK_MARKERS)
-    ]
-    if not usable:
-        raise RuntimeError("안전한 텍스트 생성 fallback 모델을 찾지 못했습니다.")
-
-    stable = [
-        name
-        for name in usable
-        if not any(marker in name.lower() for marker in UNSTABLE_MODEL_MARKERS)
-    ]
-    candidates = stable or usable
-
-    def fallback_key(name: str) -> tuple[int, int, str]:
-        lowered = name.lower()
-        family_rank = 0 if "flash" in lowered else 1 if "pro" in lowered else 2
-        lite_rank = 1 if "lite" in lowered else 0
-        return family_rank, lite_rank, name
-
-    return sorted(candidates, key=fallback_key)[0]
+    raise ModelProbeError(
+        "모든 소설 텍스트 생성 후보 모델의 probe가 실패했습니다.",
+        failures,
+    )
 
 
 def model_catalog_document(
-    catalog: list[dict[str, Any]], selected_model: str, checked_at: datetime
+    catalog: list[dict[str, Any]],
+    selected_model: str | None,
+    probe_succeeded_models: list[str],
+    probe_failed_models: list[dict[str, Any]],
+    checked_at: datetime,
 ) -> dict[str, Any]:
+    generate_catalog = generation_models(catalog)
     return {
         "checked_at": checked_at.isoformat(),
+        "listed_models": [item["name"] for item in catalog],
+        "generate_content_models": [
+            item["name"] for item in generate_catalog
+        ],
+        "probe_succeeded_models": probe_succeeded_models,
+        "probe_failed_models": probe_failed_models,
         "selected_model": selected_model,
         "selection_priority": list(PREFERRED_MODELS),
-        "fallback_policy": "stable text model; flash before pro; lexical tie-break",
-        "available_generate_content_models": [
-            item["name"] for item in catalog
-        ],
-        "models": catalog,
+        "fallback_policy": (
+            "configured; preferred stable; preferred latest aliases; "
+            "other stable/latest; preview"
+        ),
+        "model_details": catalog,
     }
 
 
@@ -380,7 +613,7 @@ def episode_markdown(
 
 
 def is_transient_error(exc: BaseException) -> bool:
-    status = getattr(exc, "status_code", None) or getattr(exc, "code", None)
+    status = error_status_code(exc)
     if status in {408, 429, 500, 502, 503, 504}:
         return True
     return isinstance(exc, (ConnectionError, TimeoutError)) or exc.__class__.__name__ in {
@@ -530,15 +763,49 @@ def main(argv: list[str] | None = None) -> int:
 
     client = genai.Client(api_key=api_key)
     catalog = call_with_retry(
-        lambda: list_generation_models(client),
+        lambda: list_models(client),
         "모델 목록 조회",
     )
-    model = select_model(catalog, os.environ.get("GEMINI_MODEL"))
-    available_names = ", ".join(item["name"] for item in catalog)
-    print(f"generateContent 지원 모델 {len(catalog)}개: {available_names}")
+    generated_at = utc_now()
+    listed_names = [item["name"] for item in catalog]
+    generate_names = [item["name"] for item in generation_models(catalog)]
+    print(f"models.list() 전체 모델 {len(listed_names)}개: {', '.join(listed_names)}")
+    print(
+        f"generateContent 지원 모델 {len(generate_names)}개: "
+        f"{', '.join(generate_names)}"
+    )
+    try:
+        model, probe_succeeded, probe_failed = probe_and_select_model(
+            client,
+            catalog,
+            os.environ.get("GEMINI_MODEL"),
+        )
+    except ModelProbeError as exc:
+        failed_catalog = model_catalog_document(
+            catalog,
+            None,
+            exc.succeeded_models,
+            exc.failed_models,
+            generated_at,
+        )
+        atomic_write_text(
+            target_catalog,
+            json.dumps(failed_catalog, ensure_ascii=False, indent=2) + "\n",
+        )
+        raise
+    catalog_document = model_catalog_document(
+        catalog,
+        model,
+        probe_succeeded,
+        probe_failed,
+        generated_at,
+    )
+    atomic_write_text(
+        target_catalog,
+        json.dumps(catalog_document, ensure_ascii=False, indent=2) + "\n",
+    )
     print(f"선택 모델: {model}")
 
-    generated_at = utc_now()
     system_prompt = read_text(PROMPTS / "system.md")
     user_prompt = build_prompt(state, episode_number)
     for response_attempt in range(1, MAX_RESPONSE_ATTEMPTS + 1):
@@ -556,7 +823,6 @@ def main(argv: list[str] | None = None) -> int:
     new_state = merge_state(
         state, update, episode_number, title, generated_at=generated_at
     )
-    catalog_document = model_catalog_document(catalog, model, generated_at)
 
     created_episode = False
     try:
@@ -571,10 +837,6 @@ def main(argv: list[str] | None = None) -> int:
             ),
         )
         created_episode = True
-        atomic_write_text(
-            target_catalog,
-            json.dumps(catalog_document, ensure_ascii=False, indent=2) + "\n",
-        )
         # State is the commit point: it advances only after the public file and
         # diagnostic catalog have been written successfully.
         atomic_write_text(
@@ -596,9 +858,6 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        secret = os.environ.get("GEMINI_API_KEY") or ""
-        message = str(exc)
-        if secret:
-            message = message.replace(secret, "[REDACTED]")
+        message = safe_error_reason(exc, limit=2000)
         print(f"{exc.__class__.__name__}: {message}", file=sys.stderr)
         raise SystemExit(1)

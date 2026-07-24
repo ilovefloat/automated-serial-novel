@@ -8,19 +8,26 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from scripts.generate_episode import (
+    ModelProbeError,
+    PREFERRED_MODELS,
     atomic_create_text,
     calculate_next_episode,
     call_with_retry,
     extract_title_and_body,
     list_generation_models,
     merge_state,
+    model_catalog_document,
+    ordered_model_candidates,
     parse_response,
-    select_model,
+    probe_and_select_model,
 )
 
 
 def catalog(*names: str) -> list[dict[str, object]]:
-    return [{"name": name} for name in names]
+    return [
+        {"name": name, "supported_actions": ["generateContent"]}
+        for name in names
+    ]
 
 
 def valid_update() -> dict[str, object]:
@@ -35,6 +42,19 @@ def valid_update() -> dict[str, object]:
 
 
 class ModelSelectionTests(unittest.TestCase):
+    def test_default_priority_matches_supported_flash_policy(self) -> None:
+        self.assertEqual(
+            PREFERRED_MODELS,
+            (
+                "gemini-3.5-flash",
+                "gemini-3.5-flash-lite",
+                "gemini-3.1-flash-lite",
+                "gemini-flash-latest",
+                "gemini-flash-lite-latest",
+            ),
+        )
+        self.assertNotIn("gemini-2.5-flash", PREFERRED_MODELS)
+
     def test_list_only_generate_content_models_and_sort(self) -> None:
         client = SimpleNamespace(
             models=SimpleNamespace(
@@ -62,23 +82,231 @@ class ModelSelectionTests(unittest.TestCase):
 
     def test_explicit_priority_ignores_catalog_order(self) -> None:
         models = catalog(
-            "gemini-2.5-flash-lite",
-            "gemini-2.5-flash",
-            "gemini-2.5-pro",
+            "gemini-flash-latest",
+            "gemini-3.1-flash-lite",
+            "gemini-3.5-flash",
         )
-        self.assertEqual(select_model(models), "gemini-2.5-flash")
         self.assertEqual(
-            select_model(models, "models/gemini-2.5-pro"),
-            "gemini-2.5-pro",
+            ordered_model_candidates(models)[0],
+            [
+                "gemini-3.5-flash",
+                "gemini-3.1-flash-lite",
+                "gemini-flash-latest",
+            ],
+        )
+        self.assertEqual(
+            ordered_model_candidates(
+                models, "models/gemini-3.1-flash-lite"
+            )[0][0],
+            "gemini-3.1-flash-lite",
         )
 
-    def test_stable_fallback_beats_preview(self) -> None:
-        models = catalog("gemini-flash-preview", "gemini-pro-stable")
-        self.assertEqual(select_model(models), "gemini-pro-stable")
+    def test_stable_and_latest_beat_preview(self) -> None:
+        models = catalog(
+            "gemini-4.0-flash-preview",
+            "gemini-flash-latest",
+            "gemini-4.0-flash",
+        )
+        self.assertEqual(
+            ordered_model_candidates(models)[0],
+            [
+                "gemini-flash-latest",
+                "gemini-4.0-flash",
+                "gemini-4.0-flash-preview",
+            ],
+        )
 
-    def test_unavailable_configured_model_fails(self) -> None:
-        with self.assertRaisesRegex(RuntimeError, "GEMINI_MODEL"):
-            select_model(catalog("gemini-2.5-flash"), "missing")
+    def test_non_text_models_are_excluded_from_fallback(self) -> None:
+        names = (
+            "gemini-3.5-flash",
+            "gemini-3.5-flash-image",
+            "gemini-tts-preview",
+            "gemini-robotics-er",
+            "gemini-computer-use-preview",
+            "gemini-deep-research",
+            "lyria-realtime",
+            "nano-banana-pro",
+            "antigravity-model",
+        )
+        self.assertEqual(
+            ordered_model_candidates(catalog(*names))[0],
+            ["gemini-3.5-flash"],
+        )
+
+    def test_catalog_separates_list_generate_and_probe_results(self) -> None:
+        listed = catalog("gemini-3.5-flash")
+        listed.append({"name": "embed-only", "supported_actions": ["embedContent"]})
+        document = model_catalog_document(
+            listed,
+            "gemini-3.5-flash",
+            ["gemini-3.5-flash"],
+            [{"name": "old-model", "status_code": 404, "reason": "not found"}],
+            datetime(2026, 1, 1, tzinfo=timezone.utc),
+        )
+        self.assertEqual(
+            document["listed_models"],
+            ["gemini-3.5-flash", "embed-only"],
+        )
+        self.assertEqual(
+            document["generate_content_models"],
+            ["gemini-3.5-flash"],
+        )
+        self.assertEqual(
+            document["probe_succeeded_models"],
+            ["gemini-3.5-flash"],
+        )
+        self.assertEqual(document["probe_failed_models"][0]["status_code"], 404)
+        self.assertEqual(document["selected_model"], "gemini-3.5-flash")
+
+
+class ProbeError(Exception):
+    def __init__(self, status_code: int, message: str) -> None:
+        super().__init__(f"{status_code} {message}")
+        self.status_code = status_code
+
+
+class ProbeModels:
+    def __init__(self, outcomes: dict[str, list[object]]) -> None:
+        self.outcomes = outcomes
+        self.calls: list[tuple[str, str, object]] = []
+
+    def generate_content(self, model: str, contents: str, config: object) -> object:
+        self.calls.append((model, contents, config))
+        outcome = self.outcomes[model].pop(0)
+        if isinstance(outcome, BaseException):
+            raise outcome
+        return SimpleNamespace(text=outcome)
+
+
+class ProbeSelectionTests(unittest.TestCase):
+    def client(self, outcomes: dict[str, list[object]]) -> SimpleNamespace:
+        return SimpleNamespace(models=ProbeModels(outcomes))
+
+    def test_listed_model_404_falls_back_to_second_candidate(self) -> None:
+        client = self.client(
+            {
+                "gemini-3.5-flash": [
+                    ProbeError(404, "NOT_FOUND model no longer available")
+                ],
+                "gemini-3.5-flash-lite": ["OK"],
+            }
+        )
+        selected, succeeded, failed = probe_and_select_model(
+            client,
+            catalog("gemini-3.5-flash", "gemini-3.5-flash-lite"),
+            sleep=lambda _: None,
+        )
+        self.assertEqual(selected, "gemini-3.5-flash-lite")
+        self.assertEqual(succeeded, ["gemini-3.5-flash-lite"])
+        self.assertEqual(failed[0]["name"], "gemini-3.5-flash")
+        self.assertEqual(failed[0]["status_code"], 404)
+        self.assertEqual(
+            [call[0] for call in client.models.calls],
+            ["gemini-3.5-flash", "gemini-3.5-flash-lite"],
+        )
+        self.assertEqual(client.models.calls[0][1], "Reply OK.")
+        self.assertEqual(client.models.calls[0][2].max_output_tokens, 1)
+
+    def test_configured_model_failure_uses_automatic_fallback(self) -> None:
+        client = self.client(
+            {
+                "custom-gemini-flash": [
+                    ProbeError(403, "PERMISSION_DENIED access denied")
+                ],
+                "gemini-3.5-flash": ["OK"],
+            }
+        )
+        selected, _, failed = probe_and_select_model(
+            client,
+            catalog("gemini-3.5-flash", "custom-gemini-flash"),
+            configured="models/custom-gemini-flash",
+            sleep=lambda _: None,
+        )
+        self.assertEqual(selected, "gemini-3.5-flash")
+        self.assertEqual(failed[0]["name"], "custom-gemini-flash")
+
+    def test_all_candidates_fail(self) -> None:
+        client = self.client(
+            {
+                "gemini-3.5-flash": [ProbeError(404, "NOT_FOUND")],
+                "gemini-3.5-flash-lite": [
+                    ProbeError(403, "PERMISSION_DENIED")
+                ],
+            }
+        )
+        with self.assertRaisesRegex(ModelProbeError, "모든") as raised:
+            probe_and_select_model(
+                client,
+                catalog("gemini-3.5-flash", "gemini-3.5-flash-lite"),
+                sleep=lambda _: None,
+            )
+        self.assertEqual(len(raised.exception.failed_models), 2)
+
+    def test_model_incompatible_400_falls_back(self) -> None:
+        client = self.client(
+            {
+                "gemini-3.5-flash": [
+                    ProbeError(
+                        400,
+                        "INVALID_ARGUMENT model does not support request",
+                    )
+                ],
+                "gemini-3.5-flash-lite": ["OK"],
+            }
+        )
+        selected, _, failed = probe_and_select_model(
+            client,
+            catalog("gemini-3.5-flash", "gemini-3.5-flash-lite"),
+            sleep=lambda _: None,
+        )
+        self.assertEqual(selected, "gemini-3.5-flash-lite")
+        self.assertEqual(failed[0]["status_code"], 400)
+
+    def test_429_retries_same_model_then_succeeds(self) -> None:
+        sleeps: list[float] = []
+        client = self.client(
+            {
+                "gemini-3.5-flash": [
+                    ProbeError(429, "RESOURCE_EXHAUSTED model not available now"),
+                    ProbeError(429, "RESOURCE_EXHAUSTED model not available now"),
+                    "OK",
+                ]
+            }
+        )
+        selected, succeeded, failed = probe_and_select_model(
+            client,
+            catalog("gemini-3.5-flash"),
+            sleep=sleeps.append,
+        )
+        self.assertEqual(selected, "gemini-3.5-flash")
+        self.assertEqual(succeeded, ["gemini-3.5-flash"])
+        self.assertEqual(failed, [])
+        self.assertEqual(sleeps, [1, 2])
+        self.assertEqual(len(client.models.calls), 3)
+
+    def test_503_retries_are_limited_and_do_not_fallback(self) -> None:
+        sleeps: list[float] = []
+        client = self.client(
+            {
+                "gemini-3.5-flash": [
+                    ProbeError(503, "UNAVAILABLE"),
+                    ProbeError(503, "UNAVAILABLE"),
+                    ProbeError(503, "UNAVAILABLE"),
+                ],
+                "gemini-3.5-flash-lite": ["OK"],
+            }
+        )
+        with self.assertRaisesRegex(ModelProbeError, "일시적"):
+            probe_and_select_model(
+                client,
+                catalog("gemini-3.5-flash", "gemini-3.5-flash-lite"),
+                sleep=sleeps.append,
+            )
+        self.assertEqual(sleeps, [1, 2])
+        self.assertEqual(
+            [call[0] for call in client.models.calls],
+            ["gemini-3.5-flash"] * 3,
+        )
 
 
 class ResponseTests(unittest.TestCase):
