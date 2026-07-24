@@ -388,6 +388,7 @@ def probe_and_select_model(
     sleep: Callable[[float], None] = time.sleep,
 ) -> tuple[str, list[str], list[dict[str, Any]]]:
     candidates, failures = ordered_model_candidates(catalog, configured)
+    transient_failures: list[dict[str, Any]] = []
     if not generation_models(catalog):
         raise ModelProbeError(
             "models.list()에서 generateContent 지원 모델을 찾지 못했습니다.",
@@ -417,11 +418,13 @@ def probe_and_select_model(
                 file=sys.stderr,
             )
             if is_transient_error(exc):
-                raise ModelProbeError(
-                    f"모델 probe의 일시적 오류가 재시도 후에도 계속되었습니다: "
-                    f"{model} status={status or 'UNKNOWN'}",
-                    failures,
-                ) from exc
+                transient_failures.append(failure)
+                print(
+                    f"경고: {model}의 일시적 오류가 제한 재시도 후에도 계속되어 "
+                    "이번 실행에서 다음 후보를 probe합니다.",
+                    file=sys.stderr,
+                )
+                continue
             if is_model_unavailable_error(exc) or is_model_incompatible_error(exc):
                 if configured and model == normalize_model_name(configured):
                     print(
@@ -438,6 +441,16 @@ def probe_and_select_model(
         print(f"모델 probe 성공: {model}")
         return model, [model], failures
 
+    if transient_failures:
+        details = ", ".join(
+            f"{failure['name']} status={failure['status_code']}"
+            for failure in transient_failures
+        )
+        raise ModelProbeError(
+            "모든 소설 텍스트 생성 후보 모델의 probe가 실패했습니다. "
+            f"일시적 오류가 재시도 후에도 계속된 후보: {details}",
+            failures,
+        )
     raise ModelProbeError(
         "모든 소설 텍스트 생성 후보 모델의 probe가 실패했습니다.",
         failures,

@@ -368,7 +368,7 @@ class ProbeSelectionTests(unittest.TestCase):
         self.assertEqual(sleeps, [1, 2])
         self.assertEqual(len(client.models.calls), 3)
 
-    def test_503_retries_are_limited_and_do_not_fallback(self) -> None:
+    def test_503_retries_are_limited_then_falls_back(self) -> None:
         sleeps: list[float] = []
         client = self.client(
             {
@@ -380,17 +380,60 @@ class ProbeSelectionTests(unittest.TestCase):
                 "gemini-3.5-flash-lite": ["OK"],
             }
         )
-        with self.assertRaisesRegex(ModelProbeError, "일시적"):
-            probe_and_select_model(
-                client,
-                catalog("gemini-3.5-flash", "gemini-3.5-flash-lite"),
-                sleep=sleeps.append,
-            )
+        selected, succeeded, failed = probe_and_select_model(
+            client,
+            catalog("gemini-3.5-flash", "gemini-3.5-flash-lite"),
+            sleep=sleeps.append,
+        )
+        self.assertEqual(selected, "gemini-3.5-flash-lite")
+        self.assertEqual(succeeded, ["gemini-3.5-flash-lite"])
+        self.assertEqual(failed[0]["status_code"], 503)
         self.assertEqual(sleeps, [1, 2])
         self.assertEqual(
             [call[0] for call in client.models.calls],
-            ["gemini-3.5-flash"] * 3,
+            ["gemini-3.5-flash"] * 3 + ["gemini-3.5-flash-lite"],
         )
+
+    def test_exhausted_429_retries_then_falls_back(self) -> None:
+        sleeps: list[float] = []
+        client = self.client(
+            {
+                "gemini-3.5-flash": [
+                    ProbeError(429, "RESOURCE_EXHAUSTED"),
+                    ProbeError(429, "RESOURCE_EXHAUSTED"),
+                    ProbeError(429, "RESOURCE_EXHAUSTED"),
+                ],
+                "gemini-3.5-flash-lite": ["OK"],
+            }
+        )
+        selected, _, failed = probe_and_select_model(
+            client,
+            catalog("gemini-3.5-flash", "gemini-3.5-flash-lite"),
+            sleep=sleeps.append,
+        )
+        self.assertEqual(selected, "gemini-3.5-flash-lite")
+        self.assertEqual(failed[0]["status_code"], 429)
+        self.assertEqual(sleeps, [1, 2])
+
+    def test_all_transient_candidates_fail_with_clear_error(self) -> None:
+        client = self.client(
+            {
+                "gemini-3.5-flash": [ProbeError(503, "UNAVAILABLE")] * 3,
+                "gemini-3.5-flash-lite": [
+                    ProbeError(429, "RESOURCE_EXHAUSTED")
+                ]
+                * 3,
+            }
+        )
+        with self.assertRaisesRegex(
+            ModelProbeError, "일시적 오류가 재시도 후에도"
+        ) as raised:
+            probe_and_select_model(
+                client,
+                catalog("gemini-3.5-flash", "gemini-3.5-flash-lite"),
+                sleep=lambda _: None,
+            )
+        self.assertEqual(len(raised.exception.failed_models), 2)
 
 
 class PipelineStageTests(unittest.TestCase):
