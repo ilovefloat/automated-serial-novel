@@ -39,7 +39,7 @@ jobs:
 
       - name: Validate repository
         run: |
-          python -m py_compile scripts/generate_episode.py scripts/rebuild_index.py scripts/validate_repository.py
+          python -m py_compile scripts/generate_episode.py scripts/narrative_control.py scripts/rebuild_index.py scripts/validate_repository.py
           python -m unittest discover -s tests -v
           python scripts/validate_repository.py
 

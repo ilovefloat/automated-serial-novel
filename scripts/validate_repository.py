@@ -81,6 +81,41 @@ def main() -> int:
     )
     if not isinstance(state.get("next_episode"), int):
         errors.append("state/story_state.json: next_episode must be an integer")
+    narrative_fields = {
+        "narrative_mode",
+        "narrative_pace",
+        "current_scene",
+        "current_scene_started_episode",
+        "active_arc",
+        "supporting_arcs",
+        "arc_states",
+        "recent_scene_fingerprints",
+        "recent_opening_patterns",
+        "recent_ending_patterns",
+        "recent_locations",
+        "recent_character_combinations",
+        "recent_conflict_types",
+        "recent_social_themes",
+        "recent_document_formats",
+        "recent_ai_interaction_types",
+        "motif_cooldowns",
+        "last_major_event_episode",
+        "last_major_reveal_episode",
+        "unresolved_immediate_actions",
+        "withheld_information",
+        "planned_long_term_reveals",
+        "recurring_symbols",
+        "symbol_meaning_history",
+        "narrative_repetition_warnings",
+    }
+    missing_narrative_fields = sorted(narrative_fields - state.keys())
+    if missing_narrative_fields:
+        errors.append(
+            "state/story_state.json: missing narrative fields "
+            f"{missing_narrative_fields}"
+        )
+    if not (ROOT / "prompts/plan.md").is_file():
+        errors.append("prompts/plan.md: private planning prompt is required")
 
     source_roots = (
         ROOT / ".github",

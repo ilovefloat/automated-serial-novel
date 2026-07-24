@@ -19,5 +19,181 @@
     "그는 AI의 도움 없이는 글을 완성하기 어렵다는 사실을 알고 있다."
   ],
   "continuity_notes": [],
-  "next_episode_pressure": "첫 노동일과 첫 AI 집필 시도를 보여준다."
+  "next_episode_pressure": "첫 노동 현장의 구체적 장면에서 시작하되 AI 집필은 장면 흐름이 필요할 때만 이어간다.",
+  "narrative_mode": "일반적인 1인칭 서술",
+  "narrative_pace": "일상 축적",
+  "current_scene": "",
+  "current_scene_started_episode": null,
+  "active_arc": "생계와 부채",
+  "supporting_arcs": [],
+  "arc_states": {
+    "생계와 부채": {
+      "current_stage": "미진행",
+      "last_progress_episode": null,
+      "next_possible_change": "첫 급여와 필수 지출의 차이를 구체화한다.",
+      "withheld_information": [],
+      "current_pressure": "수면을 줄여 두 종류의 일을 병행해야 한다.",
+      "long_term_outcome": "생존 비용이 집필 선택을 어떻게 바꾸는지 누적한다.",
+      "on_hold": false
+    },
+    "청소 노동과 신체 손상": {
+      "current_stage": "미진행",
+      "last_progress_episode": null,
+      "next_possible_change": "반복 노동의 물질적 조건을 보여준다.",
+      "withheld_information": [],
+      "current_pressure": "",
+      "long_term_outcome": "자동화의 잔여 비용이 몸에 축적된다.",
+      "on_hold": true
+    },
+    "승인 노동과 법적 위험": {
+      "current_stage": "미진행",
+      "last_progress_episode": null,
+      "next_possible_change": "승인 플랫폼의 책임 문구를 경험한다.",
+      "withheld_information": [],
+      "current_pressure": "",
+      "long_term_outcome": "형식적 승인이 현실의 책임과 연결된다.",
+      "on_hold": true
+    },
+    "AI를 이용한 집필": {
+      "current_stage": "미진행",
+      "last_progress_episode": null,
+      "next_possible_change": "첫 원고 생성과 수정 과정을 시작한다.",
+      "withheld_information": [],
+      "current_pressure": "",
+      "long_term_outcome": "도구 사용과 저자성의 관계가 변한다.",
+      "on_hold": true
+    },
+    "자기 목소리에 대한 불신": {
+      "current_stage": "미진행",
+      "last_progress_episode": null,
+      "next_possible_change": "",
+      "withheld_information": [],
+      "current_pressure": "",
+      "long_term_outcome": "자기 경험을 어떤 문장으로 믿을지 흔들린다.",
+      "on_hold": true
+    },
+    "연재 독자의 증가": {
+      "current_stage": "미진행",
+      "last_progress_episode": null,
+      "next_possible_change": "",
+      "withheld_information": [],
+      "current_pressure": "",
+      "long_term_outcome": "독자의 해석과 생계가 원고에 영향을 준다.",
+      "on_hold": true
+    },
+    "직장과 플랫폼의 감시": {
+      "current_stage": "미진행",
+      "last_progress_episode": null,
+      "next_possible_change": "",
+      "withheld_information": [],
+      "current_pressure": "",
+      "long_term_outcome": "측정과 평점이 노동자의 선택을 좁힌다.",
+      "on_hold": true
+    },
+    "주변 노동자들과의 관계": {
+      "current_stage": "미진행",
+      "last_progress_episode": null,
+      "next_possible_change": "동료 한 명과 구체적인 관계를 시작한다.",
+      "withheld_information": [],
+      "current_pressure": "",
+      "long_term_outcome": "개인의 증언이 다른 노동자의 삶과 충돌한다.",
+      "on_hold": true
+    },
+    "승인 문서와 현실 사건의 연결": {
+      "current_stage": "미진행",
+      "last_progress_episode": null,
+      "next_possible_change": "",
+      "withheld_information": [],
+      "current_pressure": "",
+      "long_term_outcome": "추상적 책임 문구가 실제 결과를 만든다.",
+      "on_hold": true
+    },
+    "작품의 상품화": {
+      "current_stage": "미진행",
+      "last_progress_episode": null,
+      "next_possible_change": "",
+      "withheld_information": [],
+      "current_pressure": "",
+      "long_term_outcome": "고통의 기록이 수익 상품으로 재편된다.",
+      "on_hold": true
+    },
+    "사회 전체의 자동화 변화": {
+      "current_stage": "미진행",
+      "last_progress_episode": null,
+      "next_possible_change": "",
+      "withheld_information": [],
+      "current_pressure": "",
+      "long_term_outcome": "개별 노동 장면이 사회 변화와 이어진다.",
+      "on_hold": true
+    },
+    "내부 소설과 외부 소설의 경계": {
+      "current_stage": "미진행",
+      "last_progress_episode": null,
+      "next_possible_change": "생활 기록과 공개 원고의 첫 경계를 흐린다.",
+      "withheld_information": [],
+      "current_pressure": "",
+      "long_term_outcome": "독자가 읽는 소설과 주인공의 원고가 겹친다.",
+      "on_hold": true
+    }
+  },
+  "recent_scene_fingerprints": [],
+  "recent_opening_patterns": [],
+  "recent_ending_patterns": [],
+  "recent_locations": [],
+  "recent_character_combinations": [],
+  "recent_conflict_types": [],
+  "recent_social_themes": [],
+  "recent_document_formats": [],
+  "recent_ai_interaction_types": [],
+  "motif_cooldowns": {
+    "major_accident": {
+      "remaining": 0,
+      "minimum_gap": 8,
+      "last_used_episode": null
+    },
+    "company_direct_warning": {
+      "remaining": 0,
+      "minimum_gap": 5,
+      "last_used_episode": null
+    },
+    "reader_comments_focus": {
+      "remaining": 0,
+      "minimum_gap": 4,
+      "last_used_episode": null
+    },
+    "approval_document_error": {
+      "remaining": 0,
+      "minimum_gap": 3,
+      "last_used_episode": null
+    },
+    "ai_profanity_sanitization": {
+      "remaining": 0,
+      "minimum_gap": 6,
+      "last_used_episode": null
+    },
+    "memory_uncertainty": {
+      "remaining": 0,
+      "minimum_gap": 5,
+      "last_used_episode": null
+    },
+    "legal_liability_crisis": {
+      "remaining": 0,
+      "minimum_gap": 7,
+      "last_used_episode": null
+    },
+    "repeated_ending_phrase": {
+      "remaining": 0,
+      "minimum_gap": 15,
+      "last_used_episode": null
+    }
+  },
+  "last_major_event_episode": null,
+  "last_major_reveal_episode": null,
+  "unresolved_immediate_actions": [],
+  "next_required_connection": "",
+  "withheld_information": [],
+  "planned_long_term_reveals": [],
+  "recurring_symbols": [],
+  "symbol_meaning_history": [],
+  "narrative_repetition_warnings": []
 }

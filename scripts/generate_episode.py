@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import copy
 import json
 import os
 import re
@@ -16,12 +15,45 @@ from typing import Any, TypeVar
 from google import genai
 from google.genai import types
 
+try:
+    from scripts.narrative_control import (
+        ARC_NAMES,
+        NARRATIVE_PACES,
+        active_cooldowns,
+        apply_narrative_state_update,
+        fingerprint_from_update,
+        migrate_story_state,
+        narrative_pace_guidance,
+        plan_continuity_errors,
+        plan_cooldown_violations,
+        scene_plan_repetition_report,
+        scene_plan_schema,
+        text_similarity_report,
+        validate_scene_plan,
+    )
+except ModuleNotFoundError:
+    from narrative_control import (  # type: ignore[no-redef]
+        ARC_NAMES,
+        NARRATIVE_PACES,
+        active_cooldowns,
+        apply_narrative_state_update,
+        fingerprint_from_update,
+        migrate_story_state,
+        narrative_pace_guidance,
+        plan_continuity_errors,
+        plan_cooldown_violations,
+        scene_plan_repetition_report,
+        scene_plan_schema,
+        text_similarity_report,
+        validate_scene_plan,
+    )
+
 ROOT = Path(__file__).resolve().parents[1]
 PROMPTS = ROOT / "prompts"
 STATE_DIR = ROOT / "state"
 EPISODES_DIR = ROOT / "docs" / "episodes"
 MODEL_CATALOG_PATH = STATE_DIR / "model_catalog.json"
-MIN_PUBLIC_CHARS = 1200
+MIN_PUBLIC_CHARS = 700
 MAX_ATTEMPTS = 3
 MAX_RESPONSE_ATTEMPTS = 2
 MAX_HISTORY_ITEMS = 20
@@ -482,6 +514,59 @@ def recent_episodes(directory: Path = EPISODES_DIR, limit: int = 3) -> str:
     )
 
 
+def recent_episode_records(
+    directory: Path = EPISODES_DIR,
+    limit: int = 5,
+    fingerprints: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    fingerprint_by_episode = {
+        item.get("episode"): item for item in (fingerprints or [])
+    }
+    files = sorted(
+        (path for path in directory.glob("*.md") if path.stem.isdigit()),
+        key=lambda path: int(path.stem),
+    )[-limit:]
+    records: list[dict[str, Any]] = []
+    for path in files:
+        markdown = read_text(path)
+        episode_number = int(path.stem)
+        title_match = re.search(r'^title:\s*["\']?(.*?)["\']?\s*$', markdown, re.M)
+        body = re.sub(r"\A---\r?\n.*?\r?\n---\s*", "", markdown, flags=re.DOTALL)
+        body = re.sub(r"\A# [^\r\n]+\r?\n+", "", body)
+        records.append(
+            {
+                "episode": episode_number,
+                "title": title_match.group(1) if title_match else path.stem,
+                "body": body.strip(),
+                "fingerprint": fingerprint_by_episode.get(episode_number),
+            }
+        )
+    return records
+
+
+def recent_episode_summaries(
+    state: dict[str, Any], limit: int = 10
+) -> list[dict[str, Any]]:
+    history = state.get("history", [])
+    return history[-limit:] if isinstance(history, list) else []
+
+
+def compact_prompt_state(state: dict[str, Any]) -> dict[str, Any]:
+    omitted = {
+        "history",
+        "recent_scene_fingerprints",
+        "recent_opening_patterns",
+        "recent_ending_patterns",
+        "recent_locations",
+        "recent_character_combinations",
+        "recent_conflict_types",
+        "recent_social_themes",
+        "recent_document_formats",
+        "recent_ai_interaction_types",
+    }
+    return {key: value for key, value in state.items() if key not in omitted}
+
+
 def strip_outer_fence(text: str) -> str:
     cleaned = text.strip()
     match = re.fullmatch(
@@ -495,12 +580,47 @@ def strip_outer_fence(text: str) -> str:
 def validate_state_update(update: Any) -> dict[str, Any]:
     if not isinstance(update, dict):
         raise ValueError("state_update는 JSON 객체여야 합니다.")
-    scalar_fields = ("summary", "next_episode_pressure")
+    scalar_fields = (
+        "summary",
+        "next_episode_pressure",
+        "actual_time_range",
+        "central_labor",
+        "emotional_start",
+        "emotional_end",
+        "opening_pattern",
+        "ending_pattern",
+        "core_sentence_structure",
+        "next_required_connection",
+        "narrative_mode",
+        "narrative_pace",
+        "narrative_function",
+        "twist_type",
+    )
     list_fields = (
         "protagonist_changes",
         "new_facts",
         "open_threads",
         "continuity_notes",
+        "next_immediate_actions",
+        "supporting_arc_progress",
+        "revealed_information",
+        "withheld_information",
+        "planned_long_term_reveals",
+        "locations",
+        "character_combination",
+        "conflict_types",
+        "social_themes",
+        "document_formats",
+        "ai_interaction_types",
+        "core_images",
+        "repetition_risks",
+        "variations_applied",
+        "motif_cooldown_updates",
+        "new_threads",
+        "maintained_threads",
+        "resolved_threads",
+        "new_questions",
+        "symbol_updates",
     )
     for field in scalar_fields:
         if not isinstance(update.get(field), str) or not update[field].strip():
@@ -508,10 +628,89 @@ def validate_state_update(update: Any) -> dict[str, Any]:
     for field in list_fields:
         value = update.get(field)
         if not isinstance(value, list) or not all(
-            isinstance(item, str) and item.strip() for item in value
+            (
+                isinstance(item, str) and item.strip()
+                if field not in {"supporting_arc_progress", "symbol_updates"}
+                else isinstance(item, dict)
+            )
+            for item in value
         ):
-            raise ValueError(f"state_update.{field}는 문자열 배열이어야 합니다.")
+            raise ValueError(f"state_update.{field}의 배열 형식이 잘못되었습니다.")
+    for field in ("direct_continuation", "scene_completed", "major_event", "major_reveal"):
+        if not isinstance(update.get(field), bool):
+            raise ValueError(f"state_update.{field}는 boolean이어야 합니다.")
+    if not isinstance(update.get("current_scene"), str):
+        raise ValueError("state_update.current_scene은 문자열이어야 합니다.")
+    if not update["scene_completed"] and not update["current_scene"].strip():
+        raise ValueError("진행 중 장면에는 current_scene이 필요합니다.")
+    if update["narrative_pace"] not in NARRATIVE_PACES:
+        raise ValueError("state_update.narrative_pace가 허용된 값이 아닙니다.")
+
+    arc_progress_fields = (
+        "arc",
+        "stage",
+        "change",
+        "next_possible_change",
+        "current_pressure",
+        "long_term_outcome",
+    )
+    progress_items = [update.get("primary_arc_progress")] + update[
+        "supporting_arc_progress"
+    ]
+    if not isinstance(progress_items[0], dict):
+        raise ValueError("state_update.primary_arc_progress는 객체여야 합니다.")
+    if len(update["supporting_arc_progress"]) > 2:
+        raise ValueError("보조 아크 진행은 최대 2개여야 합니다.")
+    for progress in progress_items:
+        if not isinstance(progress, dict):
+            raise ValueError("아크 진행 항목은 객체여야 합니다.")
+        if progress.get("arc") not in ARC_NAMES:
+            raise ValueError("등록되지 않은 장기 아크 진행이 있습니다.")
+        for field in arc_progress_fields:
+            if not isinstance(progress.get(field), str) or not progress[field].strip():
+                raise ValueError(f"아크 진행의 {field}가 유효하지 않습니다.")
+        if not isinstance(progress.get("on_hold"), bool):
+            raise ValueError("아크 진행의 on_hold는 boolean이어야 합니다.")
+        withheld = progress.get("withheld_information")
+        if not isinstance(withheld, list) or not all(
+            isinstance(item, str) and item.strip() for item in withheld
+        ):
+            raise ValueError("아크 진행의 withheld_information 형식이 잘못되었습니다.")
+    if update["primary_arc_progress"]["arc"] in {
+        progress["arc"] for progress in update["supporting_arc_progress"]
+    }:
+        raise ValueError("주요 아크와 보조 아크가 중복됩니다.")
+
+    for symbol in update["symbol_updates"]:
+        if not all(
+            isinstance(symbol.get(field), str) and symbol[field].strip()
+            for field in ("symbol", "meaning", "development")
+        ):
+            raise ValueError("상징 갱신 형식이 잘못되었습니다.")
     return update
+
+
+def validate_update_against_plan(
+    update: dict[str, Any], plan: dict[str, Any]
+) -> None:
+    if update["direct_continuation"] != plan["direct_continuation"]:
+        raise ValueError("본문 상태와 계획의 직접 연속 여부가 다릅니다.")
+    if update["primary_arc_progress"]["arc"] != plan["active_arc"]:
+        raise ValueError("본문 상태와 계획의 주요 아크가 다릅니다.")
+    if {
+        progress["arc"] for progress in update["supporting_arc_progress"]
+    } != set(plan["supporting_arcs"]):
+        raise ValueError("본문 상태와 계획의 보조 아크가 다릅니다.")
+    if update["narrative_mode"] != plan["narrative_mode"]:
+        raise ValueError("본문 상태와 계획의 서술 형식이 다릅니다.")
+    if update["narrative_pace"] != plan["narrative_pace"]:
+        raise ValueError("본문 상태와 계획의 서사 속도가 다릅니다.")
+    if update["narrative_function"] != plan["narrative_function"]:
+        raise ValueError("본문 상태와 계획의 서사 기능이 다릅니다.")
+    if not set(update["motif_cooldown_updates"]).issubset(
+        set(plan["motifs_used"])
+    ):
+        raise ValueError("계획에 없던 냉각 소재가 본문 상태에 추가되었습니다.")
 
 
 def parse_response(raw: str) -> tuple[str, dict[str, Any]]:
@@ -558,9 +757,12 @@ def merge_state(
     update: dict[str, Any],
     episode_number: int,
     title: str,
+    scene_plan: dict[str, Any],
+    similarity_report: dict[str, Any] | None = None,
     generated_at: datetime | None = None,
 ) -> dict[str, Any]:
-    merged = copy.deepcopy(state)
+    validate_update_against_plan(update, scene_plan)
+    merged = migrate_story_state(state)
     history = merged.setdefault("history", [])
     if not isinstance(history, list):
         raise ValueError("state.history는 배열이어야 합니다.")
@@ -571,6 +773,7 @@ def merge_state(
             "episode": episode_number,
             "title": title,
             "summary": update["summary"],
+            "narrative_pace": update["narrative_pace"],
         }
     )
     merged["history"] = history[-MAX_HISTORY_ITEMS:]
@@ -582,12 +785,28 @@ def merge_state(
     merged["new_facts"] = list(
         dict.fromkeys(old_facts + update["new_facts"])
     )[-MAX_FACT_ITEMS:]
-    merged["open_threads"] = update["open_threads"]
+    resolved = set(update["resolved_threads"])
+    existing_threads = [
+        thread for thread in merged.get("open_threads", []) if thread not in resolved
+    ]
+    merged["open_threads"] = list(
+        dict.fromkeys(
+            existing_threads
+            + update["maintained_threads"]
+            + update["new_threads"]
+            + update["open_threads"]
+        )
+    )[-50:]
     merged["continuity_notes"] = update["continuity_notes"]
     merged["next_episode_pressure"] = update["next_episode_pressure"]
     merged["next_episode"] = episode_number + 1
     merged["last_generated_at"] = (generated_at or utc_now()).isoformat()
-    return merged
+    return apply_narrative_state_update(
+        merged,
+        update,
+        episode_number,
+        similarity_report=similarity_report,
+    )
 
 
 def episode_markdown(
@@ -646,6 +865,105 @@ def call_with_retry(
 
 
 def response_schema() -> dict[str, Any]:
+    string_array = {"type": "array", "items": {"type": "string"}}
+    arc_progress = {
+        "type": "object",
+        "required": [
+            "arc",
+            "stage",
+            "change",
+            "next_possible_change",
+            "withheld_information",
+            "current_pressure",
+            "long_term_outcome",
+            "on_hold",
+        ],
+        "properties": {
+            "arc": {"type": "string", "enum": list(ARC_NAMES)},
+            "stage": {"type": "string"},
+            "change": {"type": "string"},
+            "next_possible_change": {"type": "string"},
+            "withheld_information": {
+                "type": "array",
+                "items": {"type": "string"},
+            },
+            "current_pressure": {"type": "string"},
+            "long_term_outcome": {"type": "string"},
+            "on_hold": {"type": "boolean"},
+        },
+    }
+    state_properties: dict[str, Any] = {
+        field: {"type": "string"}
+        for field in (
+            "summary",
+            "next_episode_pressure",
+            "actual_time_range",
+            "current_scene",
+            "central_labor",
+            "emotional_start",
+            "emotional_end",
+            "opening_pattern",
+            "ending_pattern",
+            "core_sentence_structure",
+            "next_required_connection",
+            "narrative_mode",
+            "narrative_function",
+            "twist_type",
+        )
+    }
+    state_properties["narrative_pace"] = {
+        "type": "string",
+        "enum": list(NARRATIVE_PACES),
+    }
+    for field in (
+        "protagonist_changes",
+        "new_facts",
+        "open_threads",
+        "continuity_notes",
+        "next_immediate_actions",
+        "revealed_information",
+        "withheld_information",
+        "planned_long_term_reveals",
+        "locations",
+        "character_combination",
+        "conflict_types",
+        "social_themes",
+        "document_formats",
+        "ai_interaction_types",
+        "core_images",
+        "repetition_risks",
+        "variations_applied",
+        "motif_cooldown_updates",
+        "new_threads",
+        "maintained_threads",
+        "resolved_threads",
+        "new_questions",
+    ):
+        state_properties[field] = string_array
+    for field in (
+        "direct_continuation",
+        "scene_completed",
+        "major_event",
+        "major_reveal",
+    ):
+        state_properties[field] = {"type": "boolean"}
+    state_properties["primary_arc_progress"] = arc_progress
+    state_properties["supporting_arc_progress"] = {
+        "type": "array",
+        "items": arc_progress,
+    }
+    state_properties["symbol_updates"] = {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "required": ["symbol", "meaning", "development"],
+            "properties": {
+                "symbol": {"type": "string"},
+                "meaning": {"type": "string"},
+                "development": {"type": "string"},
+            },
+        },
+    }
     return {
         "type": "object",
         "required": ["public_markdown", "state_update"],
@@ -653,47 +971,103 @@ def response_schema() -> dict[str, Any]:
             "public_markdown": {"type": "string"},
             "state_update": {
                 "type": "object",
-                "required": [
-                    "summary",
-                    "protagonist_changes",
-                    "new_facts",
-                    "open_threads",
-                    "continuity_notes",
-                    "next_episode_pressure",
-                ],
-                "properties": {
-                    "summary": {"type": "string"},
-                    "protagonist_changes": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                    },
-                    "new_facts": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                    },
-                    "open_threads": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                    },
-                    "continuity_notes": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                    },
-                    "next_episode_pressure": {"type": "string"},
-                },
+                "required": list(state_properties),
+                "properties": state_properties,
             },
         },
     }
 
 
-def build_prompt(state: dict[str, Any], episode_number: int) -> str:
+def build_prompt(
+    state: dict[str, Any],
+    episode_number: int,
+    scene_plan: dict[str, Any],
+) -> str:
     template = read_text(PROMPTS / "episode.md")
     return template.format(
         episode_number=episode_number,
-        story_state=json.dumps(state, ensure_ascii=False, indent=2),
+        story_state=json.dumps(
+            compact_prompt_state(state),
+            ensure_ascii=False,
+            indent=2,
+        ),
         continuity=read_text(STATE_DIR / "continuity.md"),
         recent_episodes=recent_episodes(),
+        scene_plan=json.dumps(scene_plan, ensure_ascii=False, indent=2),
     )
+
+
+def build_plan_prompt(
+    state: dict[str, Any],
+    episode_number: int,
+    feedback: str = "(첫 계획: 추가 피드백 없음)",
+) -> str:
+    template = read_text(PROMPTS / "plan.md")
+    return template.format(
+        episode_number=episode_number,
+        story_state=json.dumps(
+            compact_prompt_state(state),
+            ensure_ascii=False,
+            indent=2,
+        ),
+        recent_fingerprints=json.dumps(
+            state.get("recent_scene_fingerprints", []),
+            ensure_ascii=False,
+            indent=2,
+        ),
+        active_cooldowns=json.dumps(
+            active_cooldowns(state),
+            ensure_ascii=False,
+            indent=2,
+        ),
+        recent_summaries=json.dumps(
+            recent_episode_summaries(state),
+            ensure_ascii=False,
+            indent=2,
+        ),
+        pace_guidance=narrative_pace_guidance(state),
+        feedback=feedback,
+    )
+
+
+def parse_json_object(raw: str, label: str) -> dict[str, Any]:
+    if not raw or not raw.strip():
+        raise ValueError(f"{label} 응답이 비어 있습니다.")
+    try:
+        payload = json.loads(strip_outer_fence(raw))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{label} JSON 파싱 실패: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise ValueError(f"{label} 응답은 JSON 객체여야 합니다.")
+    return payload
+
+
+def generate_scene_plan(
+    client: genai.Client,
+    model: str,
+    state: dict[str, Any],
+    episode_number: int,
+    feedback: str = "(첫 계획: 추가 피드백 없음)",
+) -> dict[str, Any]:
+    response = call_with_retry(
+        lambda: client.models.generate_content(
+            model=model,
+            contents=build_plan_prompt(state, episode_number, feedback),
+            config=types.GenerateContentConfig(
+                temperature=0.65,
+                top_p=0.9,
+                max_output_tokens=2048,
+                response_mime_type="application/json",
+                response_json_schema=scene_plan_schema(),
+            ),
+        ),
+        "비공개 장면 계획 생성",
+    )
+    try:
+        raw = response.text or ""
+    except (AttributeError, ValueError) as exc:
+        raise ValueError("장면 계획 응답에서 텍스트를 읽을 수 없습니다.") from exc
+    return validate_scene_plan(parse_json_object(raw, "장면 계획"))
 
 
 def parse_generated_episode(raw: str) -> tuple[str, str, dict[str, Any]]:
@@ -726,6 +1100,72 @@ def generate_raw_response(
         raise ValueError("Gemini 응답에서 텍스트를 읽을 수 없습니다.") from exc
 
 
+def plan_quality_report(
+    plan: dict[str, Any],
+    state: dict[str, Any],
+) -> dict[str, Any]:
+    repetition = scene_plan_repetition_report(
+        plan,
+        state.get("recent_scene_fingerprints", []),
+    )
+    return {
+        "repetition": repetition,
+        "continuity_errors": plan_continuity_errors(plan, state),
+        "cooldown_violations": plan_cooldown_violations(plan, state),
+    }
+
+
+def plan_needs_revision(report: dict[str, Any]) -> bool:
+    return bool(
+        report["repetition"].get("too_similar")
+        or report["continuity_errors"]
+        or report["cooldown_violations"]
+    )
+
+
+def revision_feedback(
+    report: dict[str, Any],
+    text_report: dict[str, Any] | None = None,
+) -> str:
+    instructions = {
+        "plan_repetition": report["repetition"],
+        "continuity_errors": report["continuity_errors"],
+        "cooldown_violations": report["cooldown_violations"],
+        "text_similarity": text_report or {},
+        "required_revision": (
+            "직접 연속 조건을 지키면서 시작 방식, 장소의 서사 기능, 인물 조합, "
+            "갈등, 문서 형식, 종료 방식 중 하나 이상을 실질적으로 바꿀 것. "
+            "사회비판 설명은 구체적 행동과 결과로 바꿀 것."
+        ),
+    }
+    return json.dumps(instructions, ensure_ascii=False, indent=2)
+
+
+def generate_episode_from_plan(
+    client: genai.Client,
+    model: str,
+    state: dict[str, Any],
+    episode_number: int,
+    scene_plan: dict[str, Any],
+) -> tuple[str, str, dict[str, Any]]:
+    system_prompt = read_text(PROMPTS / "system.md")
+    user_prompt = build_prompt(state, episode_number, scene_plan)
+    for response_attempt in range(1, MAX_RESPONSE_ATTEMPTS + 1):
+        raw = generate_raw_response(client, model, system_prompt, user_prompt)
+        try:
+            title, body, update = parse_generated_episode(raw)
+            validate_update_against_plan(update, scene_plan)
+            return title, body, update
+        except ValueError:
+            if response_attempt == MAX_RESPONSE_ATTEMPTS:
+                raise
+            print(
+                "응답 형식 또는 계획 일치 검증 실패, 본문 생성을 한 번 더 시도합니다.",
+                file=sys.stderr,
+            )
+    raise AssertionError("unreachable")
+
+
 def output_paths(preview_dir: Path | None) -> tuple[Path, Path, Path]:
     if preview_dir is None:
         return EPISODES_DIR, STATE_DIR / "story_state.json", MODEL_CATALOG_PATH
@@ -754,7 +1194,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     source_state_path = STATE_DIR / "story_state.json"
-    state = load_json(source_state_path)
+    state = migrate_story_state(load_json(source_state_path))
     episode_number = calculate_next_episode(state, EPISODES_DIR.glob("*.md"))
     target_episodes, target_state, target_catalog = output_paths(args.preview_dir)
     output_path = target_episodes / f"{episode_number:03d}.md"
@@ -806,22 +1246,96 @@ def main(argv: list[str] | None = None) -> int:
     )
     print(f"선택 모델: {model}")
 
-    system_prompt = read_text(PROMPTS / "system.md")
-    user_prompt = build_prompt(state, episode_number)
-    for response_attempt in range(1, MAX_RESPONSE_ATTEMPTS + 1):
-        raw = generate_raw_response(client, model, system_prompt, user_prompt)
-        try:
-            title, body, update = parse_generated_episode(raw)
-            break
-        except ValueError:
-            if response_attempt == MAX_RESPONSE_ATTEMPTS:
-                raise
-            print(
-                "응답 형식 검증 실패, 본문 생성을 한 번 더 시도합니다.",
-                file=sys.stderr,
+    recent_records = recent_episode_records(
+        fingerprints=state.get("recent_scene_fingerprints", []),
+    )
+    scene_plan = generate_scene_plan(
+        client,
+        model,
+        state,
+        episode_number,
+    )
+    plan_report = plan_quality_report(scene_plan, state)
+    quality_retry_used = False
+    if plan_needs_revision(plan_report):
+        quality_retry_used = True
+        print(
+            "장면 계획에서 연속성·냉각 기간·반복 위험을 감지해 한 번 재계획합니다."
+        )
+        scene_plan = generate_scene_plan(
+            client,
+            model,
+            state,
+            episode_number,
+            revision_feedback(plan_report),
+        )
+        plan_report = plan_quality_report(scene_plan, state)
+        if plan_needs_revision(plan_report):
+            raise ValueError(
+                "재계획 후에도 연속성·냉각 기간·반복 위험 조건을 충족하지 못했습니다."
             )
+
+    title, body, update = generate_episode_from_plan(
+        client,
+        model,
+        state,
+        episode_number,
+        scene_plan,
+    )
+    fingerprint = fingerprint_from_update(update, episode_number)
+    similarity = text_similarity_report(
+        title,
+        body,
+        recent_records,
+        fingerprint=fingerprint,
+    )
+    print(
+        f"최근 원고 최대 유사도: {similarity['max_score']:.4f} "
+        f"(비교 화: {similarity['similar_episode']})"
+    )
+    if similarity["too_similar"]:
+        if quality_retry_used:
+            raise ValueError(
+                "허용된 품질 재시도를 이미 사용했고 생성 원고의 반복 위험이 높습니다."
+            )
+        quality_retry_used = True
+        print("생성 원고의 반복 위험이 높아 한 번 재계획하고 재생성합니다.")
+        scene_plan = generate_scene_plan(
+            client,
+            model,
+            state,
+            episode_number,
+            revision_feedback(plan_report, similarity),
+        )
+        plan_report = plan_quality_report(scene_plan, state)
+        if plan_needs_revision(plan_report):
+            raise ValueError("유사도 재계획이 서사 제약을 충족하지 못했습니다.")
+        title, body, update = generate_episode_from_plan(
+            client,
+            model,
+            state,
+            episode_number,
+            scene_plan,
+        )
+        fingerprint = fingerprint_from_update(update, episode_number)
+        similarity = text_similarity_report(
+            title,
+            body,
+            recent_records,
+            fingerprint=fingerprint,
+        )
+        print(f"재생성 후 최근 원고 최대 유사도: {similarity['max_score']:.4f}")
+        if similarity["too_similar"]:
+            raise ValueError("재생성 후에도 최근 원고와 지나치게 유사합니다.")
+
     new_state = merge_state(
-        state, update, episode_number, title, generated_at=generated_at
+        state,
+        update,
+        episode_number,
+        title,
+        scene_plan,
+        similarity_report=similarity,
+        generated_at=generated_at,
     )
 
     created_episode = False

@@ -14,6 +14,8 @@ from scripts.generate_episode import (
     calculate_next_episode,
     call_with_retry,
     extract_title_and_body,
+    generate_episode_from_plan,
+    generate_scene_plan,
     list_generation_models,
     merge_state,
     model_catalog_document,
@@ -38,6 +40,88 @@ def valid_update() -> dict[str, object]:
         "open_threads": ["반려된 문서"],
         "continuity_notes": ["왼손 장갑이 찢어졌다"],
         "next_episode_pressure": "다음 교대가 다가온다",
+        "actual_time_range": "교대 시작 뒤 20분",
+        "direct_continuation": False,
+        "scene_completed": False,
+        "current_scene": "세척실 첫 교대",
+        "next_immediate_actions": ["막힌 배수구를 확인한다"],
+        "primary_arc_progress": {
+            "arc": "청소 노동과 신체 손상",
+            "stage": "첫 노출",
+            "change": "작업 조건을 직접 경험한다",
+            "next_possible_change": "통증이 누적된다",
+            "withheld_information": ["이전 작업자의 퇴사 이유"],
+            "current_pressure": "교대 시간이 줄어든다",
+            "long_term_outcome": "몸의 손상이 선택을 제한한다",
+            "on_hold": False,
+        },
+        "supporting_arc_progress": [],
+        "revealed_information": ["세척 시간이 자동 배정된다"],
+        "withheld_information": ["이전 작업자의 퇴사 이유"],
+        "planned_long_term_reveals": ["이전 작업자의 퇴사 이유"],
+        "locations": ["지하 세척실"],
+        "character_combination": ["주인공"],
+        "central_labor": "배수구 청소",
+        "conflict_types": ["작업 속도와 안전"],
+        "social_themes": ["생산성과 신체 위험"],
+        "document_formats": ["일반 서술"],
+        "ai_interaction_types": ["없음"],
+        "emotional_start": "무감각",
+        "emotional_end": "경계",
+        "opening_pattern": "진행 중 행동",
+        "ending_pattern": "새 정보",
+        "core_images": ["검은 배수구"],
+        "core_sentence_structure": "짧은 감각 문장",
+        "repetition_risks": [],
+        "variations_applied": ["청소를 관계가 아닌 위험 탐색으로 사용"],
+        "motif_cooldown_updates": [],
+        "new_threads": ["이전 작업자의 흔적"],
+        "maintained_threads": ["반려된 문서"],
+        "resolved_threads": [],
+        "new_questions": ["이전 작업자는 왜 떠났는가"],
+        "next_required_connection": "배수구 덮개를 드는 동작",
+        "narrative_mode": "일반적인 1인칭 서술",
+        "narrative_pace": "일상 축적",
+        "narrative_function": "노동 조건 첫 노출",
+        "twist_type": "없음",
+        "major_event": False,
+        "major_reveal": False,
+        "symbol_updates": [],
+    }
+
+
+def valid_plan() -> dict[str, object]:
+    return {
+        "continuation_point": "새 교대 시작",
+        "direct_continuation": False,
+        "continued_actions": [],
+        "central_scene": "세척실 첫 교대",
+        "main_characters": ["주인공"],
+        "location": "지하 세척실",
+        "changes": ["작업 조건을 알게 된다"],
+        "intentionally_unchanged": ["장기 법적 위험"],
+        "reveal_information": ["자동 배정 시간"],
+        "withhold_information": ["이전 작업자의 퇴사 이유"],
+        "social_theme": "생산성과 신체 위험",
+        "avoid_recent_repetition": [],
+        "expected_ending_point": "배수구 덮개를 드는 순간",
+        "arc_impact": "청소 노동의 조건을 처음 드러냄",
+        "threads_to_touch": [],
+        "add_new_thread": True,
+        "style_feature": "짧은 감각 문장",
+        "narrative_mode": "일반적인 1인칭 서술",
+        "narrative_pace": "일상 축적",
+        "active_arc": "청소 노동과 신체 손상",
+        "supporting_arcs": [],
+        "central_labor": "배수구 청소",
+        "conflict_type": "작업 속도와 안전",
+        "document_format": "일반 서술",
+        "ai_interaction_type": "없음",
+        "opening_pattern": "진행 중 행동",
+        "ending_pattern": "새 정보",
+        "core_image": "검은 배수구",
+        "narrative_function": "노동 조건 첫 노출",
+        "motifs_used": [],
     }
 
 
@@ -309,6 +393,46 @@ class ProbeSelectionTests(unittest.TestCase):
         )
 
 
+class PipelineStageTests(unittest.TestCase):
+    def test_plan_stage_returns_private_validated_plan(self) -> None:
+        client = SimpleNamespace(
+            models=ProbeModels(
+                {"gemini-test": [json.dumps(valid_plan(), ensure_ascii=False)]}
+            )
+        )
+        generated = generate_scene_plan(
+            client,
+            "gemini-test",
+            {"history": [], "recent_scene_fingerprints": []},
+            1,
+        )
+        self.assertEqual(generated["central_scene"], "세척실 첫 교대")
+        self.assertEqual(client.models.calls[0][2].response_mime_type, "application/json")
+
+    def test_body_stage_uses_plan_and_returns_separate_state(self) -> None:
+        public = "# 세척실\n\n" + ("물비린내가 바닥에 남아 있었다. " * 80)
+        response = json.dumps(
+            {
+                "public_markdown": public,
+                "state_update": valid_update(),
+            },
+            ensure_ascii=False,
+        )
+        client = SimpleNamespace(
+            models=ProbeModels({"gemini-test": [response]})
+        )
+        title, body, update = generate_episode_from_plan(
+            client,
+            "gemini-test",
+            {"history": [], "recent_scene_fingerprints": []},
+            1,
+            valid_plan(),
+        )
+        self.assertEqual(title, "세척실")
+        self.assertNotIn("state_update", body)
+        self.assertEqual(update["actual_time_range"], "교대 시작 뒤 20분")
+
+
 class ResponseTests(unittest.TestCase):
     def test_parse_json_and_outer_fence(self) -> None:
         public = "# 야간 승인\n\n" + ("긴 문장입니다. " * 160)
@@ -360,12 +484,21 @@ class StateAndFileTests(unittest.TestCase):
             update,
             1,
             "제목",
+            valid_plan(),
             generated_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
         )
         self.assertEqual(state["next_episode"], 1)
         self.assertEqual(merged["next_episode"], 2)
         self.assertEqual(merged["new_facts"], ["기존 사실", "새 사실"])
         self.assertEqual(merged["history"][0]["episode"], 1)
+        self.assertEqual(merged["recent_scene_fingerprints"][0]["episode"], 1)
+        self.assertEqual(merged["current_scene_started_episode"], 1)
+        self.assertEqual(
+            merged["arc_states"]["청소 노동과 신체 손상"][
+                "last_progress_episode"
+            ],
+            1,
+        )
 
     def test_merge_state_bounds_compressed_history_and_facts(self) -> None:
         state = {
@@ -378,11 +511,32 @@ class StateAndFileTests(unittest.TestCase):
         }
         update = valid_update()
         update["new_facts"] = ["새 사실"]
-        merged = merge_state(state, update, 21, "제목")
+        merged = merge_state(state, update, 21, "제목", valid_plan())
         self.assertEqual(len(merged["history"]), 20)
         self.assertEqual(merged["history"][0]["episode"], 2)
         self.assertEqual(len(merged["new_facts"]), 60)
         self.assertEqual(merged["new_facts"][-1], "새 사실")
+
+    def test_same_mock_update_merges_deterministically(self) -> None:
+        state = {"next_episode": 1, "history": [], "new_facts": []}
+        generated_at = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        first = merge_state(
+            state,
+            valid_update(),
+            1,
+            "제목",
+            valid_plan(),
+            generated_at=generated_at,
+        )
+        second = merge_state(
+            state,
+            valid_update(),
+            1,
+            "제목",
+            valid_plan(),
+            generated_at=generated_at,
+        )
+        self.assertEqual(first, second)
 
     def test_atomic_create_never_overwrites(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
