@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)">
+  <meta name="description" content="자동 연재 소설 에피소드">
+  <title>에피소드</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+</head>
+<body>
+  <main class="shell reading">
+    <nav class="reader-nav" aria-label="에피소드 탐색">
+      <a href="./" aria-label="연재 목록으로 돌아가기">← 연재 목록</a>
+      <span id="reading-label" aria-live="polite"></span>
+    </nav>
+    <article id="content" class="reader-status" aria-live="polite">불러오는 중…</article>
+  </main>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      const params = new URLSearchParams(location.search);
+      const file = params.get("file");
+      const content = document.getElementById("content");
+      const label = document.getElementById("reading-label");
+
+      function showError(message) {
+        content.className = "reader-status";
+        content.textContent = message;
+      }
+
+      if (!file || !/^episodes\/\d{3}\.md$/.test(file)) {
+        showError("유효하지 않은 에피소드 경로입니다.");
+        return;
+      }
+
+      if (!window.marked) {
+        showError("본문 변환기를 불러오지 못했습니다. 네트워크 연결을 확인해 주세요.");
+        return;
+      }
+
+      fetch(file, { cache: "no-cache" })
+        .then(response => {
+          if (!response.ok) throw new Error("에피소드를 불러올 수 없습니다.");
+          return response.text();
+        })
+        .then(markdown => {
+          const episodeMatch = markdown.match(/^episode:\s*(\d+)/m);
+          const withoutFrontMatter = markdown.replace(/^---[\s\S]*?---\s*/, "");
+
+          marked.setOptions({
+            gfm: true,
+            breaks: false,
+            headerIds: false,
+            mangle: false
+          });
+
+          content.className = "";
+          content.innerHTML = marked.parse(withoutFrontMatter);
+
+          const heading = content.querySelector("h1");
+          if (heading) {
+            document.title = heading.textContent;
+            label.textContent = episodeMatch ? `${episodeMatch[1]}화` : "";
+          }
+        })
+        .catch(error => showError(error.message));
+    });
+  </script>
+</body>
+</html>
