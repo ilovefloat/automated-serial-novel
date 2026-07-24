@@ -25,13 +25,21 @@
 9. 다음 화를 위한 긴장을 남기되 억지 절단 신공은 피한다.
 10. 전체 답변을 코드펜스로 감싸지 않는다.
 
-본문 뒤에 정확히 다음 구분자를 넣고, 공개되지 않을 상태 갱신 JSON을 출력하라.
+## 출력 형식
 
----STORY_STATE_UPDATE---
+응답은 아래 구조의 JSON 객체 하나여야 한다. JSON 전체나 `public_markdown`을
+코드펜스로 감싸지 않는다. 독자에게 공개할 내용과 내부 상태 갱신을 섞지 않는다.
+
+`public_markdown`은 `# 제목`으로 시작하고, 제목에는 화수를 넣지 않는다.
+
 {{
-  "summary": "이번 화의 핵심 사건 요약",
-  "protagonist_changes": ["주인공 상태 변화"],
-  "new_facts": ["새로 확정된 설정"],
-  "open_threads": ["미해결 갈등이나 복선"],
-  "next_episode_pressure": "다음 화에서 자연스럽게 이어질 압력"
+  "public_markdown": "# 제목\n\n공개할 소설 본문",
+  "state_update": {{
+    "summary": "이번 화의 핵심 사건을 압축한 요약",
+    "protagonist_changes": ["이번 화에서 달라진 주인공 상태"],
+    "new_facts": ["새로 확정된 세계관·인물 사실"],
+    "open_threads": ["아직 회수하지 않은 갈등이나 복선"],
+    "continuity_notes": ["다음 집필에서 지켜야 할 구체적인 연속성"],
+    "next_episode_pressure": "다음 화로 자연스럽게 이어질 현실적 압력"
+  }}
 }}

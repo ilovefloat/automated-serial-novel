@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Generate without committing"
+        description: "Preview artifact only; do not change or commit repository files"
         required: false
         default: false
         type: boolean
@@ -22,7 +22,7 @@ concurrency:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
@@ -35,36 +35,63 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: python -m pip install -r requirements.txt
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Validate repository
+        run: |
+          python -m py_compile scripts/generate_episode.py scripts/rebuild_index.py scripts/validate_repository.py
+          python -m unittest discover -s tests -v
+          python scripts/validate_repository.py
+
+      - name: Select run mode
+        id: mode
+        shell: bash
+        env:
+          REQUESTED_DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" && "${REQUESTED_DRY_RUN}" == "true" ]]; then
+            echo "preview=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "preview=false" >> "${GITHUB_OUTPUT}"
+          fi
 
       - name: Generate next episode
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
-        run: python scripts/generate_episode.py
+          PREVIEW: ${{ steps.mode.outputs.preview }}
+        shell: bash
+        run: |
+          if [[ "${PREVIEW}" == "true" ]]; then
+            python scripts/generate_episode.py --preview-dir preview
+          else
+            python scripts/generate_episode.py
+          fi
 
       - name: Rebuild episode index
+        if: ${{ steps.mode.outputs.preview == 'false' }}
         run: python scripts/rebuild_index.py
 
       - name: Upload preview artifact
+        if: ${{ steps.mode.outputs.preview == 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: generated-episode
-          path: |
-            docs/episodes/
-            state/story_state.json
+          name: serial-episode-preview
+          path: preview/
+          if-no-files-found: error
           retention-days: 14
 
       - name: Commit generated episode
-        if: ${{ github.event_name == 'schedule' || inputs.dry_run != true }}
+        if: ${{ steps.mode.outputs.preview == 'false' }}
         run: |
           git config user.name "serial-novel-bot"
           git config user.email "serial-novel-bot@users.noreply.github.com"
-          git add docs/ state/story_state.json state/model_catalog.json
+          git add docs/episodes/ docs/index.html docs/episodes.json \
+            state/story_state.json state/model_catalog.json
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
           fi
           episode=$(python -c "import json; print(json.load(open('state/story_state.json', encoding='utf-8'))['next_episode'] - 1)")
           git commit -m "Publish episode ${episode}"
-          git push
+          git push origin HEAD:main

@@ -3,41 +3,129 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f7f8fa" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#15171a" media="(prefers-color-scheme: dark)">
   <meta name="description" content="자동 연재 소설 에피소드">
   <title>에피소드</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
 </head>
 <body>
   <main class="shell reading">
     <nav class="reader-nav" aria-label="에피소드 탐색">
-      <a href="./" aria-label="연재 목록으로 돌아가기">← 연재 목록</a>
+      <a class="nav-list" href="./">연재 목록</a>
       <span id="reading-label" aria-live="polite"></span>
     </nav>
-    <article id="content" class="reader-status" aria-live="polite">불러오는 중…</article>
+
+    <article id="content" class="reader-status" aria-live="polite">
+      본문을 불러오는 중입니다.
+    </article>
+
+    <nav id="episode-nav" class="episode-nav" aria-label="이전 및 다음 에피소드" hidden>
+      <a id="previous-episode" rel="prev">이전 화</a>
+      <a class="nav-list" href="./">목록</a>
+      <a id="next-episode" rel="next">다음 화</a>
+    </nav>
   </main>
 
   <script>
-    window.addEventListener("DOMContentLoaded", () => {
-      const params = new URLSearchParams(location.search);
+    (() => {
+      "use strict";
+
+      const params = new URLSearchParams(window.location.search);
       const file = params.get("file");
       const content = document.getElementById("content");
       const label = document.getElementById("reading-label");
+      const episodeNav = document.getElementById("episode-nav");
+      const previousLink = document.getElementById("previous-episode");
+      const nextLink = document.getElementById("next-episode");
+      const safeEpisodePath = /^episodes\/\d{3,}\.md$/;
 
       function showError(message) {
         content.className = "reader-status";
+        content.setAttribute("role", "alert");
         content.textContent = message;
       }
 
-      if (!file || !/^episodes\/\d{3}\.md$/.test(file)) {
-        showError("유효하지 않은 에피소드 경로입니다.");
-        return;
+      function removeFrontMatter(markdown) {
+        return markdown.replace(/^---\r?\n[\s\S]*?\r?\n---\s*/, "");
       }
 
-      if (!window.marked) {
-        showError("본문 변환기를 불러오지 못했습니다. 네트워크 연결을 확인해 주세요.");
+      function appendParagraph(article, lines) {
+        if (lines.length === 0) return;
+        const paragraph = document.createElement("p");
+        paragraph.textContent = lines.join(" ").trim();
+        article.appendChild(paragraph);
+        lines.length = 0;
+      }
+
+      function renderMarkdown(markdown) {
+        const fragment = document.createDocumentFragment();
+        const paragraphLines = [];
+        const lines = removeFrontMatter(markdown).split(/\r?\n/);
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) {
+            appendParagraph(fragment, paragraphLines);
+            continue;
+          }
+          const heading = /^(#{1,3})\s+(.+)$/.exec(trimmed);
+          if (heading) {
+            appendParagraph(fragment, paragraphLines);
+            const element = document.createElement(`h${heading[1].length}`);
+            element.textContent = heading[2];
+            fragment.appendChild(element);
+            continue;
+          }
+          if (/^(?:---+|\*\*\*+)$/.test(trimmed)) {
+            appendParagraph(fragment, paragraphLines);
+            fragment.appendChild(document.createElement("hr"));
+            continue;
+          }
+          if (trimmed.startsWith("> ")) {
+            appendParagraph(fragment, paragraphLines);
+            const quote = document.createElement("blockquote");
+            quote.textContent = trimmed.slice(2);
+            fragment.appendChild(quote);
+            continue;
+          }
+          paragraphLines.push(trimmed);
+        }
+        appendParagraph(fragment, paragraphLines);
+        content.replaceChildren(fragment);
+      }
+
+      function episodeHref(path) {
+        return `episode.html?file=${encodeURIComponent(path)}`;
+      }
+
+      function configureNavigation(manifest) {
+        if (!manifest || !Array.isArray(manifest.episodes)) return;
+        const index = manifest.episodes.findIndex(episode => episode.file === file);
+        if (index < 0) return;
+
+        const episode = manifest.episodes[index];
+        label.textContent = `${episode.episode}화`;
+        const previous = manifest.episodes[index - 1];
+        const next = manifest.episodes[index + 1];
+
+        if (previous) {
+          previousLink.href = episodeHref(previous.file);
+          previousLink.hidden = false;
+        } else {
+          previousLink.hidden = true;
+        }
+        if (next) {
+          nextLink.href = episodeHref(next.file);
+          nextLink.hidden = false;
+        } else {
+          nextLink.hidden = true;
+        }
+        episodeNav.hidden = false;
+      }
+
+      if (!file || !safeEpisodePath.test(file)) {
+        showError("유효하지 않은 에피소드 경로입니다.");
         return;
       }
 
@@ -47,27 +135,25 @@
           return response.text();
         })
         .then(markdown => {
-          const episodeMatch = markdown.match(/^episode:\s*(\d+)/m);
-          const withoutFrontMatter = markdown.replace(/^---[\s\S]*?---\s*/, "");
-
-          marked.setOptions({
-            gfm: true,
-            breaks: false,
-            headerIds: false,
-            mangle: false
-          });
-
+          renderMarkdown(markdown);
           content.className = "";
-          content.innerHTML = marked.parse(withoutFrontMatter);
-
+          content.removeAttribute("role");
+          content.setAttribute("aria-live", "off");
           const heading = content.querySelector("h1");
-          if (heading) {
-            document.title = heading.textContent;
-            label.textContent = episodeMatch ? `${episodeMatch[1]}화` : "";
-          }
+          if (heading) document.title = heading.textContent;
         })
         .catch(error => showError(error.message));
-    });
+
+      fetch("episodes.json", { cache: "no-cache" })
+        .then(response => {
+          if (!response.ok) throw new Error("목록을 불러올 수 없습니다.");
+          return response.json();
+        })
+        .then(configureNavigation)
+        .catch(() => {
+          label.textContent = "";
+        });
+    })();
   </script>
 </body>
 </html>
