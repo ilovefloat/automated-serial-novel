@@ -15,6 +15,7 @@
 <body>
   <main id="write-form">
     <input id="content_subject" type="text" value="">
+    <textarea id="summernote" name="content_memo" style="display: none"></textarea>
     <div class="note-editor">
       <div
         class="note-editable"
@@ -38,11 +39,19 @@
 
     function jqueryMock(element) {
       return {
+        data(name) {
+          return name === "summernote" && element.id === "summernote"
+            ? { initialized: true }
+            : undefined;
+        },
         summernote(command, html) {
           if (command !== "code") throw new Error("unexpected command");
-          element.innerHTML = html;
-          element.dispatchEvent(new Event("input", { bubbles: true }));
-          element.dispatchEvent(new Event("change", { bubbles: true }));
+          const editable = element.id === "summernote"
+            ? element.nextElementSibling.querySelector(".note-editable")
+            : element;
+          editable.innerHTML = html;
+          editable.dispatchEvent(new Event("input", { bubbles: true }));
+          editable.dispatchEvent(new Event("change", { bubbles: true }));
         }
       };
     }

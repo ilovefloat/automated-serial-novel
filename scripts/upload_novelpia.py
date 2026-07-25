@@ -271,9 +271,25 @@ def populate_and_verify_editor(
         page.evaluate(
             """([element, html]) => {
               const jq = window.jQuery || window.$;
+              const noteFrame = element.closest(".note-editor");
+              const source = noteFrame?.previousElementSibling;
               if (jq && jq.fn && typeof jq.fn.summernote === "function") {
-                jq(element).summernote("code", html);
-                return true;
+                const initializedSource =
+                  source && typeof jq(source).data === "function"
+                    && jq(source).data("summernote")
+                    ? source
+                    : element;
+                try {
+                  jq(initializedSource).summernote("code", html);
+                  if (element.innerHTML.trim()) {
+                    for (const name of ["input", "change", "blur"]) {
+                      element.dispatchEvent(new Event(name, { bubbles: true }));
+                    }
+                    return true;
+                  }
+                } catch (error) {
+                  // Continue to the visible-editor fallback below.
+                }
               }
               element.innerHTML = html;
               for (const name of ["input", "change", "blur"]) {
