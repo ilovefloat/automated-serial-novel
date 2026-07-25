@@ -6,6 +6,8 @@ import unittest
 from pathlib import Path
 
 from scripts.novelpia_content import (
+    blank_line_separator_count,
+    has_editor_indentation,
     markdown_to_safe_html,
     parse_episode_markdown,
     resolve_episode_path,
@@ -59,15 +61,31 @@ class EpisodeParsingTests(unittest.TestCase):
         rendered = markdown_to_safe_html(
             "문단\n줄바꿈\n\n**굵게** *기울임*\n\n> 인용\n\n---\n\n- 하나\n- 둘"
         )
-        for tag in ("<p>", "<br", "<strong>", "<em>", "<blockquote>", "<hr", "<ul>", "<li>"):
+        for tag in ("<br", "<strong>", "<em>", "<blockquote>", "<hr", "<ul>", "<li>"):
             self.assertIn(tag, rendered)
+        self.assertNotIn("<p", rendered)
 
-    def test_adjacent_paragraphs_receive_visible_blank_line(self) -> None:
+    def test_paragraphs_use_css_independent_break_pairs(self) -> None:
         rendered = markdown_to_safe_html("첫 문단입니다.\n\n둘째 문단입니다.")
         self.assertEqual(
             rendered,
-            "<p>첫 문단입니다.</p><p><br></p><p>둘째 문단입니다.</p>",
+            "첫 문단입니다.<br><br>둘째 문단입니다.",
         )
+        self.assertEqual(blank_line_separator_count(rendered), 1)
+        self.assertNotIn("<p><br></p>", rendered)
+
+    def test_incidental_indentation_and_extra_blank_lines_are_normalized(
+        self,
+    ) -> None:
+        rendered = markdown_to_safe_html(
+            " \t첫 문단입니다.  \n\n\n\n    둘째 문단입니다.\n\t셋째 줄입니다."
+        )
+        self.assertEqual(
+            rendered,
+            "첫 문단입니다.<br><br>둘째 문단입니다.<br>셋째 줄입니다.",
+        )
+        self.assertFalse(has_editor_indentation(rendered))
+        self.assertEqual(blank_line_separator_count(rendered), 1)
 
     def test_dangerous_html_is_removed_or_neutralized(self) -> None:
         rendered = markdown_to_safe_html(

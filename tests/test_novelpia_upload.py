@@ -33,17 +33,19 @@ FIXTURE = ROOT / "tests" / "fixtures" / "novelpia_editor.html"
 
 
 def content() -> EpisodeContent:
-    plain = (
+    paragraphs = (
         "첫 문장은 편집기 검증을 위한 충분한 길이의 핵심 문자열입니다. "
-        "중간에는 여러 문단과 내용이 자연스럽게 이어집니다. "
-        "마지막 문장은 입력 결과의 뒷부분을 검증하기 위한 핵심 문자열입니다."
+        "첫 문단의 나머지 내용도 자연스럽게 이어집니다.",
+        "중간에는 별도의 문단과 내용이 자연스럽게 이어집니다.",
+        "마지막 문장은 입력 결과의 뒷부분을 검증하기 위한 핵심 문자열입니다.",
     )
+    plain = " ".join(paragraphs)
     return EpisodeContent(
         episode=12,
         title="회색 빛의 간격",
         date="2026-07-25",
         markdown_body=plain,
-        html_body=f"<p>{plain}</p>",
+        html_body="<br><br>".join(paragraphs),
         plain_text=plain,
         path=ROOT / "docs" / "episodes" / "012.md",
         repository_path="docs/episodes/012.md",
@@ -79,6 +81,8 @@ class PlaywrightFixtureTests(unittest.TestCase):
             self.page.locator("#content_subject").input_value(), content().title
         )
         self.assertIn("마지막 문장", verification.actual_text)
+        self.assertNotIn("<p", verification.actual_html.lower())
+        self.assertEqual(verification.actual_html.lower().count("<br><br>"), 2)
 
     def test_dom_fallback_sets_visible_editor_and_events(self) -> None:
         self.page.evaluate("delete window.jQuery; delete window.$")
@@ -126,6 +130,34 @@ class PlaywrightFixtureTests(unittest.TestCase):
             window.jQuery.fn = { summernote() {} };"""
         )
         with self.assertRaises(NovelpiaError) as raised:
+            populate_and_verify_editor(self.page, content())
+        self.assertEqual(raised.exception.code, "NOVELPIA_VALIDATION_FAILED")
+        self.assertEqual(self.page.evaluate("window.submitCount"), 0)
+
+    def test_paragraph_spacing_loss_is_detected_before_submit(self) -> None:
+        self.page.evaluate(
+            """window.jQuery = window.$ = element => ({
+              summernote(command, html) {
+                element.innerHTML = html.replaceAll("<br><br>", "<br>");
+              }
+            });
+            window.jQuery.fn = { summernote() {} };"""
+        )
+        with self.assertRaisesRegex(NovelpiaError, "문단 사이 공백") as raised:
+            populate_and_verify_editor(self.page, content())
+        self.assertEqual(raised.exception.code, "NOVELPIA_VALIDATION_FAILED")
+        self.assertEqual(self.page.evaluate("window.submitCount"), 0)
+
+    def test_artificial_editor_indentation_is_detected_before_submit(self) -> None:
+        self.page.evaluate(
+            """window.jQuery = window.$ = element => ({
+              summernote(command, html) {
+                element.innerHTML = "&nbsp;&nbsp;" + html;
+              }
+            });
+            window.jQuery.fn = { summernote() {} };"""
+        )
+        with self.assertRaisesRegex(NovelpiaError, "들여쓰기") as raised:
             populate_and_verify_editor(self.page, content())
         self.assertEqual(raised.exception.code, "NOVELPIA_VALIDATION_FAILED")
         self.assertEqual(self.page.evaluate("window.submitCount"), 0)

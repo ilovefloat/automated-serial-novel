@@ -23,6 +23,8 @@ from playwright.sync_api import (
 try:
     from scripts.novelpia_content import (
         EpisodeContent,
+        blank_line_separator_count,
+        has_editor_indentation,
         normalize_text,
         parse_episode_markdown,
     )
@@ -31,6 +33,8 @@ try:
 except ModuleNotFoundError:
     from novelpia_content import (  # type: ignore
         EpisodeContent,
+        blank_line_separator_count,
+        has_editor_indentation,
         normalize_text,
         parse_episode_markdown,
     )
@@ -333,6 +337,18 @@ def populate_and_verify_editor(
     if not actual_html.strip():
         raise NovelpiaError(
             "NOVELPIA_VALIDATION_FAILED", "본문 HTML이 비어 있습니다."
+        )
+    expected_blank_lines = blank_line_separator_count(content.html_body)
+    actual_blank_lines = blank_line_separator_count(actual_html)
+    if actual_blank_lines < expected_blank_lines:
+        raise NovelpiaError(
+            "NOVELPIA_VALIDATION_FAILED",
+            "편집기 입력 과정에서 문단 사이 공백이 손실됐습니다.",
+        )
+    if has_editor_indentation(actual_html):
+        raise NovelpiaError(
+            "NOVELPIA_VALIDATION_FAILED",
+            "편집기 본문에 의도하지 않은 공백 들여쓰기가 생겼습니다.",
         )
     return EditorVerification(
         subject=subject,

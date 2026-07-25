@@ -93,6 +93,26 @@ def html_to_plain_text(value: str) -> str:
     return normalize_text("".join(parser.parts))
 
 
+def blank_line_separator_count(value: str) -> int:
+    return len(
+        re.findall(
+            r"<br\s*/?>\s*<br\s*/?>",
+            value,
+            flags=re.IGNORECASE,
+        )
+    )
+
+
+def has_editor_indentation(value: str) -> bool:
+    return bool(
+        re.search(
+            r"(?:^|<br\s*/?>)\s*(?:&nbsp;|\u00a0){2,}",
+            value,
+            flags=re.IGNORECASE,
+        )
+    )
+
+
 def strip_episode_prefix(title: str) -> str:
     cleaned = EPISODE_PREFIX.sub("", title, count=1).strip()
     return cleaned or title.strip()
@@ -128,8 +148,22 @@ def resolve_episode_path(
 
 
 def markdown_to_safe_html(markdown_body: str) -> str:
+    # Generated prose occasionally contains incidental leading spaces, tabs,
+    # trailing spaces, or several blank lines. In a contenteditable/Summernote
+    # pipeline those can become code blocks, indentation, or oversized gaps.
+    normalized_lines = [
+        line.strip()
+        for line in markdown_body.replace("\r\n", "\n")
+        .replace("\r", "\n")
+        .split("\n")
+    ]
+    normalized_markdown = re.sub(
+        r"\n{3,}",
+        "\n\n",
+        "\n".join(normalized_lines),
+    ).strip()
     rendered = markdown.markdown(
-        markdown_body,
+        normalized_markdown,
         extensions=["nl2br", "sane_lists"],
         output_format="html",
     )
@@ -141,16 +175,39 @@ def markdown_to_safe_html(markdown_body: str) -> str:
         clean_content_tags=DROP_CONTENT_TAGS,
         link_rel=None,
     )
-    # Novelpia's Summernote theme renders adjacent <p> blocks with almost no
-    # visual margin. An explicit empty paragraph survives editor normalization
-    # and preserves a natural blank line without allowing arbitrary styles.
-    spaced = re.sub(
-        r"</p>\s*(?=<p(?:\s|>))",
-        "</p><p><br></p>",
+    # Novelpia applies its own paragraph margins and indentation after
+    # Summernote submission. Empty <p><br></p> spacer blocks therefore produce
+    # inconsistent gaps. Flatten prose paragraphs to explicit <br><br>
+    # separators so editor and viewer CSS cannot add a second layout layer.
+    compatible = re.sub(
+        r"</p>\s*(?=<(?:blockquote|hr|ul|ol)(?:\s|>|/))",
+        "</p><br><br>",
         cleaned,
         flags=re.IGNORECASE,
     )
-    return spaced.strip()
+    compatible = re.sub(
+        r"(</(?:blockquote|ul|ol)>|<hr\s*/?>)\s*"
+        r"(?=<(?:p|blockquote|hr|ul|ol)(?:\s|>|/))",
+        r"\1<br><br>",
+        compatible,
+        flags=re.IGNORECASE,
+    )
+    compatible = re.sub(
+        r"</p>\s*<p(?:\s[^>]*)?>",
+        "<br><br>",
+        compatible,
+        flags=re.IGNORECASE,
+    )
+    compatible = re.sub(
+        r"</?p(?:\s[^>]*)?>",
+        "",
+        compatible,
+        flags=re.IGNORECASE,
+    )
+    compatible = re.sub(r"\s*\n\s*", "", compatible)
+    compatible = re.sub(r">\s+<", "><", compatible)
+    compatible = compatible.replace("&nbsp;", " ").replace("\u00a0", " ")
+    return compatible.strip()
 
 
 def _front_matter(text: str, path: Path) -> tuple[dict[str, Any], str]:
