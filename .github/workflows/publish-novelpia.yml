@@ -57,8 +57,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      AUTH_PATH: ${{ runner.temp }}/novelpia-auth.json
-      REFRESHED_AUTH_PATH: ${{ runner.temp }}/novelpia-auth-refreshed.json
       PREVIEW_PATH: preview/novelpia-editor.png
       PUBLISH_STATE: state/novelpia_publish_state.json
 
@@ -78,6 +76,12 @@ jobs:
         run: |
           python -m pip install -r requirements-dev.txt
           python -m playwright install --with-deps chromium
+
+      - name: Initialize temporary authentication paths
+        shell: bash
+        run: |
+          echo "AUTH_PATH=${RUNNER_TEMP}/novelpia-auth.json" >> "${GITHUB_ENV}"
+          echo "REFRESHED_AUTH_PATH=${RUNNER_TEMP}/novelpia-auth-refreshed.json" >> "${GITHUB_ENV}"
 
       - name: Restore storage state without logging it
         id: restore_auth

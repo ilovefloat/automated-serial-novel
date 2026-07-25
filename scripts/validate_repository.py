@@ -93,6 +93,18 @@ def validate_novelpia_workflow(path: Path) -> list[str]:
         errors.append("artifact path is too broad or sensitive")
     if re.search(r"gh secret set[^\n]*NOVELPIA_AUTH_STATE_B64[^\n]+\$\{", text):
         errors.append("secret value may be exposed in a command argument")
+    jobs = data.get("jobs", {})
+    if isinstance(jobs, dict):
+        for job_name, job in jobs.items():
+            if not isinstance(job, dict):
+                continue
+            job_env = job.get("env", {})
+            if isinstance(job_env, dict) and any(
+                "${{ runner." in str(value) for value in job_env.values()
+            ):
+                errors.append(
+                    f"job-level env cannot use runner context: {job_name}"
+                )
     return [f"{path}: {error}" for error in errors]
 
 
