@@ -141,7 +141,16 @@ def markdown_to_safe_html(markdown_body: str) -> str:
         clean_content_tags=DROP_CONTENT_TAGS,
         link_rel=None,
     )
-    return cleaned.strip()
+    # Novelpia's Summernote theme renders adjacent <p> blocks with almost no
+    # visual margin. An explicit empty paragraph survives editor normalization
+    # and preserves a natural blank line without allowing arbitrary styles.
+    spaced = re.sub(
+        r"</p>\s*(?=<p(?:\s|>))",
+        "</p><p><br></p>",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    return spaced.strip()
 
 
 def _front_matter(text: str, path: Path) -> tuple[dict[str, Any], str]:

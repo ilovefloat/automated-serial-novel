@@ -62,6 +62,13 @@ class EpisodeParsingTests(unittest.TestCase):
         for tag in ("<p>", "<br", "<strong>", "<em>", "<blockquote>", "<hr", "<ul>", "<li>"):
             self.assertIn(tag, rendered)
 
+    def test_adjacent_paragraphs_receive_visible_blank_line(self) -> None:
+        rendered = markdown_to_safe_html("첫 문단입니다.\n\n둘째 문단입니다.")
+        self.assertEqual(
+            rendered,
+            "<p>첫 문단입니다.</p><p><br></p><p>둘째 문단입니다.</p>",
+        )
+
     def test_dangerous_html_is_removed_or_neutralized(self) -> None:
         rendered = markdown_to_safe_html(
             '<script>alert(1)</script><iframe src="https://tracker"></iframe>'
