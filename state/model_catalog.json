@@ -1,5 +1,613 @@
 {
-  "checked_at": "2026-07-24T13:41:27.395249+00:00",
+  "checked_at": "2026-07-25T15:34:31.832698+00:00",
+  "models": [
+    {
+      "name": "antigravity-preview-05-2026",
+      "display_name": "Antigravity Agent Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "aqa",
+      "display_name": "Model that performs Attributed Question Answering.",
+      "supported_actions": [
+        "generateAnswer"
+      ],
+      "input_token_limit": 7168,
+      "output_token_limit": 1024
+    },
+    {
+      "name": "deep-research-max-preview-04-2026",
+      "display_name": "Deep Research Max Preview (Apr-21-2026)",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "deep-research-preview-04-2026",
+      "display_name": "Deep Research Preview (Apr-21-2026)",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "deep-research-pro-preview-12-2025",
+      "display_name": "Deep Research Pro Preview (Dec-12-2025)",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-2.0-flash",
+      "display_name": "Gemini 2.0 Flash",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 8192
+    },
+    {
+      "name": "gemini-2.0-flash-001",
+      "display_name": "Gemini 2.0 Flash 001",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 8192
+    },
+    {
+      "name": "gemini-2.0-flash-lite",
+      "display_name": "Gemini 2.0 Flash-Lite",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 8192
+    },
+    {
+      "name": "gemini-2.0-flash-lite-001",
+      "display_name": "Gemini 2.0 Flash-Lite 001",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 8192
+    },
+    {
+      "name": "gemini-2.5-computer-use-preview-10-2025",
+      "display_name": "Gemini 2.5 Computer Use Preview 10-2025",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-2.5-flash",
+      "display_name": "Gemini 2.5 Flash",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-2.5-flash-image",
+      "display_name": "Nano Banana",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 32768,
+      "output_token_limit": 32768
+    },
+    {
+      "name": "gemini-2.5-flash-lite",
+      "display_name": "Gemini 2.5 Flash-Lite",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-2.5-flash-native-audio-latest",
+      "display_name": "Gemini 2.5 Flash Native Audio Latest",
+      "supported_actions": [
+        "countTokens",
+        "bidiGenerateContent"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 8192
+    },
+    {
+      "name": "gemini-2.5-flash-native-audio-preview-09-2025",
+      "display_name": "Gemini 2.5 Flash Native Audio Preview 09-2025",
+      "supported_actions": [
+        "countTokens",
+        "bidiGenerateContent"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 8192
+    },
+    {
+      "name": "gemini-2.5-flash-native-audio-preview-12-2025",
+      "display_name": "Gemini 2.5 Flash Native Audio Preview 12-2025",
+      "supported_actions": [
+        "countTokens",
+        "bidiGenerateContent"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 8192
+    },
+    {
+      "name": "gemini-2.5-flash-preview-tts",
+      "display_name": "Gemini 2.5 Flash Preview TTS",
+      "supported_actions": [
+        "countTokens",
+        "generateContent"
+      ],
+      "input_token_limit": 8192,
+      "output_token_limit": 16384
+    },
+    {
+      "name": "gemini-2.5-pro",
+      "display_name": "Gemini 2.5 Pro",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-2.5-pro-preview-tts",
+      "display_name": "Gemini 2.5 Pro Preview TTS",
+      "supported_actions": [
+        "countTokens",
+        "generateContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 8192,
+      "output_token_limit": 16384
+    },
+    {
+      "name": "gemini-3-flash-preview",
+      "display_name": "Gemini 3 Flash Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-3-pro-image",
+      "display_name": "Nano Banana Pro",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 32768
+    },
+    {
+      "name": "gemini-3-pro-image-preview",
+      "display_name": "Nano Banana Pro",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 32768
+    },
+    {
+      "name": "gemini-3-pro-preview",
+      "display_name": "Gemini 3 Pro Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-3.1-flash-image",
+      "display_name": "Nano Banana 2",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 65536,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-3.1-flash-image-preview",
+      "display_name": "Nano Banana 2",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 65536,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-3.1-flash-lite",
+      "display_name": "Gemini 3.1 Flash Lite",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-3.1-flash-lite-image",
+      "display_name": "Nano Banana 2 Lite",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 65536,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-3.1-flash-lite-preview",
+      "display_name": "Gemini 3.1 Flash Lite Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-3.1-flash-live-preview",
+      "display_name": "Gemini 3.1 Flash Live Preview",
+      "supported_actions": [
+        "bidiGenerateContent"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-3.1-flash-tts-preview",
+      "display_name": "Gemini 3.1 Flash TTS Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 8192,
+      "output_token_limit": 16384
+    },
+    {
+      "name": "gemini-3.1-pro-preview",
+      "display_name": "Gemini 3.1 Pro Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-3.1-pro-preview-customtools",
+      "display_name": "Gemini 3.1 Pro Preview Custom Tools",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-3.5-flash",
+      "display_name": "Gemini 3.5 Flash",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-3.5-flash-lite",
+      "display_name": "Gemini 3.5 Flash Lite",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-3.5-live-translate-preview",
+      "display_name": "Gemini 3.5 Live Translate Preview",
+      "supported_actions": [
+        "bidiGenerateContent"
+      ],
+      "input_token_limit": 16384,
+      "output_token_limit": 32768
+    },
+    {
+      "name": "gemini-3.6-flash",
+      "display_name": "Gemini 3.6 Flash",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-embedding-001",
+      "display_name": "Gemini Embedding 001",
+      "supported_actions": [
+        "embedContent",
+        "countTextTokens",
+        "countTokens",
+        "asyncBatchEmbedContent"
+      ],
+      "input_token_limit": 2048,
+      "output_token_limit": 1
+    },
+    {
+      "name": "gemini-embedding-2",
+      "display_name": "Gemini Embedding 2",
+      "supported_actions": [
+        "embedContent",
+        "countTextTokens",
+        "countTokens",
+        "asyncBatchEmbedContent"
+      ],
+      "input_token_limit": 8192,
+      "output_token_limit": 1
+    },
+    {
+      "name": "gemini-embedding-2-preview",
+      "display_name": "Gemini Embedding 2 Preview",
+      "supported_actions": [
+        "embedContent",
+        "countTextTokens",
+        "countTokens",
+        "asyncBatchEmbedContent"
+      ],
+      "input_token_limit": 8192,
+      "output_token_limit": 1
+    },
+    {
+      "name": "gemini-flash-latest",
+      "display_name": "Gemini Flash Latest",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-flash-lite-latest",
+      "display_name": "Gemini Flash-Lite Latest",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-omni-flash-preview",
+      "display_name": "Gemini Omni Flash Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-pro-latest",
+      "display_name": "Gemini Pro Latest",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-robotics-er-1.5-preview",
+      "display_name": "Gemini Robotics-ER 1.5 Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-robotics-er-1.6-preview",
+      "display_name": "Gemini Robotics-ER 1.6 Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemma-4-26b-a4b-it",
+      "display_name": "Gemma 4 26B A4B IT",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 262144,
+      "output_token_limit": 32768
+    },
+    {
+      "name": "gemma-4-31b-it",
+      "display_name": "Gemma 4 31B IT",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 262144,
+      "output_token_limit": 32768
+    },
+    {
+      "name": "imagen-4.0-fast-generate-001",
+      "display_name": "Imagen 4 Fast",
+      "supported_actions": [
+        "predict"
+      ],
+      "input_token_limit": 480,
+      "output_token_limit": 8192
+    },
+    {
+      "name": "imagen-4.0-generate-001",
+      "display_name": "Imagen 4",
+      "supported_actions": [
+        "predict"
+      ],
+      "input_token_limit": 480,
+      "output_token_limit": 8192
+    },
+    {
+      "name": "imagen-4.0-ultra-generate-001",
+      "display_name": "Imagen 4 Ultra",
+      "supported_actions": [
+        "predict"
+      ],
+      "input_token_limit": 480,
+      "output_token_limit": 8192
+    },
+    {
+      "name": "lyria-3-clip-preview",
+      "display_name": "Lyria 3 Clip Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "lyria-3-pro-preview",
+      "display_name": "Lyria 3 Pro Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "nano-banana-pro-preview",
+      "display_name": "Nano Banana Pro",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 32768
+    },
+    {
+      "name": "veo-3.1-fast-generate-preview",
+      "display_name": "Veo 3.1 fast",
+      "supported_actions": [
+        "predictLongRunning"
+      ],
+      "input_token_limit": 480,
+      "output_token_limit": 8192
+    },
+    {
+      "name": "veo-3.1-generate-preview",
+      "display_name": "Veo 3.1",
+      "supported_actions": [
+        "predictLongRunning"
+      ],
+      "input_token_limit": 480,
+      "output_token_limit": 8192
+    },
+    {
+      "name": "veo-3.1-lite-generate-preview",
+      "display_name": "Veo 3.1 lite",
+      "supported_actions": [
+        "predictLongRunning"
+      ],
+      "input_token_limit": 480,
+      "output_token_limit": 8192
+    }
+  ],
   "listed_models": [
     "antigravity-preview-05-2026",
     "aqa",
@@ -102,16 +710,10 @@
     "nano-banana-pro-preview"
   ],
   "probe_succeeded_models": [
-    "gemini-3.5-flash-lite"
+    "gemini-3.5-flash"
   ],
-  "probe_failed_models": [
-    {
-      "name": "gemini-3.5-flash",
-      "status_code": 503,
-      "reason": "503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}"
-    }
-  ],
-  "selected_model": "gemini-3.5-flash-lite",
+  "probe_failed_models": [],
+  "selected_model": "gemini-3.5-flash",
   "selection_priority": [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",

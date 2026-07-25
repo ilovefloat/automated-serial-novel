@@ -6,6 +6,12 @@
       "title": "회색 빛의 간격",
       "date": "2026-07-24",
       "file": "episodes/001.md"
+    },
+    {
+      "episode": 2,
+      "title": "삼백 원짜리 도장",
+      "date": "2026-07-25",
+      "file": "episodes/002.md"
     }
   ]
 }
