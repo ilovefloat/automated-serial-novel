@@ -12,6 +12,7 @@ from unittest.mock import patch
 from playwright.sync_api import sync_playwright
 
 from scripts.novelpia_content import EpisodeContent
+from scripts.novelpia_login import save_storage_state
 from scripts.refresh_novelpia_secret import (
     MAX_SECRET_BYTES,
     load_and_validate_storage_state,
@@ -220,6 +221,35 @@ class StorageStateTests(unittest.TestCase):
         command, stdin = calls[0]
         self.assertNotIn("sensitive-base64", command)
         self.assertEqual(stdin, "sensitive-base64")
+
+    def test_saved_state_excludes_google_and_keeps_only_novelpia(self) -> None:
+        class Context:
+            def storage_state(self, **kwargs: object) -> dict[str, object]:
+                self.kwargs = kwargs
+                return {
+                    "cookies": [
+                        {"domain": ".google.com", "name": "google", "value": "secret"},
+                        {
+                            "domain": ".novelpia.com",
+                            "name": "novelpia",
+                            "value": "session",
+                        },
+                    ],
+                    "origins": [
+                        {"origin": "https://accounts.google.com", "localStorage": []},
+                        {"origin": "https://novelpia.com", "localStorage": []},
+                    ],
+                }
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "auth.json"
+            save_storage_state(Context(), path)
+            saved = json.loads(path.read_text(encoding="utf-8"))
+        serialized = json.dumps(saved)
+        self.assertNotIn("google.com", serialized)
+        self.assertNotIn("google", serialized)
+        self.assertIn("novelpia.com", serialized)
+        self.assertIn("novelpia", serialized)
 
 
 class RepositorySafetyTests(unittest.TestCase):

@@ -267,14 +267,29 @@ submit은 사용하지 않는다.
 ### 최초 로그인은 로컬에서만
 
 Google 이메일·비밀번호를 코드, secret, 환경변수로 받지 않는다. Google 로그인,
-CAPTCHA와 추가 인증은 자동화하지 않는다. 로컬 PC의 보이는 Chrome/Chromium에서
-사용자가 직접 로그인한 뒤 storage state만 저장한다.
+CAPTCHA와 추가 인증은 자동화하지 않는다. 스크립트는 먼저 Playwright나 원격
+디버깅에 연결되지 않은 설치형 일반 Chrome을 전용 프로필로 연다. 사용자가
+로그인하고 노벨피아 작성 화면까지 확인한 뒤 그 Chrome을 완전히 닫아야 한다.
+그 이후에만 Playwright가 닫힌 프로필을 열어 노벨피아 세션을 확인한다.
 
 ```powershell
 python -m pip install -r requirements.txt
 python -m playwright install chromium
 python scripts\novelpia_login.py
 ```
+
+명령 실행 후 일반 Chrome에서 다음 순서로 진행한다.
+
+1. Google 로그인을 직접 완료한다.
+2. 노벨피아 작성 화면에서 제목 입력란이 보이는지 확인한다.
+3. 이 명령이 연 전용 Chrome 창을 모두 닫는다.
+4. PowerShell로 돌아와 Enter를 누른다.
+
+로그인 중인 Chrome에는 Playwright 제어, WebDriver, 원격 디버깅 연결이 없다.
+따라서 Google이 자동화 브라우저 로그인을 차단하는 문제를 피한다. 로그인 완료
+후 추출되는 JSON에서는 Google 등 다른 도메인의 cookie·origin을 제거하고
+`novelpia.com` 데이터만 저장한다. 기본 전용 프로필
+`secrets/novelpia-login-profile`은 추출 성공 후 삭제한다.
 
 성공하면 `secrets/novelpia-auth.json`이 생성된다. `secrets/`와 인증 파일 패턴은
 `.gitignore`에 포함되어 있으며 이 파일을 커밋하거나 artifact로 올리면 안 된다.
