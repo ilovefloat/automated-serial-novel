@@ -57,6 +57,7 @@ MODEL_CATALOG_PATH = STATE_DIR / "model_catalog.json"
 MIN_PUBLIC_CHARS = 700
 MAX_ATTEMPTS = 3
 MAX_RESPONSE_ATTEMPTS = 2
+MAX_PLAN_RESPONSE_ATTEMPTS = 2
 MAX_HISTORY_ITEMS = 20
 MAX_FACT_ITEMS = 60
 PROBE_MAX_OUTPUT_TOKENS = 1
@@ -1216,25 +1217,57 @@ def generate_scene_plan(
     episode_number: int,
     feedback: str = "(첫 계획: 추가 피드백 없음)",
 ) -> dict[str, Any]:
-    response = call_with_retry(
-        lambda: client.models.generate_content(
-            model=model,
-            contents=build_plan_prompt(state, episode_number, feedback),
-            config=types.GenerateContentConfig(
-                temperature=0.65,
-                top_p=0.9,
-                max_output_tokens=2048,
-                response_mime_type="application/json",
-                response_json_schema=scene_plan_schema(),
+    attempt_feedback = feedback
+    for plan_attempt in range(1, MAX_PLAN_RESPONSE_ATTEMPTS + 1):
+        log(
+            f"장면 계획 응답 생성 "
+            f"({plan_attempt}/{MAX_PLAN_RESPONSE_ATTEMPTS})"
+        )
+        response = call_with_retry(
+            lambda: client.models.generate_content(
+                model=model,
+                contents=build_plan_prompt(
+                    state, episode_number, attempt_feedback
+                ),
+                config=types.GenerateContentConfig(
+                    temperature=0.65,
+                    top_p=0.9,
+                    # The full Korean plan schema can exceed 2,048 tokens.
+                    # A cutoff produces a syntactically unterminated JSON string.
+                    max_output_tokens=8192,
+                    response_mime_type="application/json",
+                    response_json_schema=scene_plan_schema(),
+                ),
             ),
-        ),
-        "비공개 장면 계획 생성",
-    )
-    try:
-        raw = response.text or ""
-    except (AttributeError, ValueError) as exc:
-        raise ValueError("장면 계획 응답에서 텍스트를 읽을 수 없습니다.") from exc
-    return validate_scene_plan(parse_json_object(raw, "장면 계획"))
+            "비공개 장면 계획 생성",
+        )
+        try:
+            raw = response.text or ""
+        except (AttributeError, ValueError) as exc:
+            parse_error = ValueError(
+                "장면 계획 응답에서 텍스트를 읽을 수 없습니다."
+            )
+            parse_error.__cause__ = exc
+        else:
+            try:
+                return validate_scene_plan(
+                    parse_json_object(raw, "장면 계획")
+                )
+            except ValueError as exc:
+                parse_error = exc
+
+        if plan_attempt == MAX_PLAN_RESPONSE_ATTEMPTS:
+            raise parse_error
+        log(
+            f"장면 계획 응답 검증 실패: {parse_error}; "
+            "파일이나 상태를 변경하지 않고 계획 응답을 한 번 더 생성합니다."
+        )
+        attempt_feedback = (
+            f"{feedback}\n\n"
+            "직전 계획 응답은 불완전하거나 JSON 스키마를 충족하지 못했다. "
+            "모든 필드를 포함한 완결된 JSON 객체 하나만 다시 반환할 것."
+        )
+    raise AssertionError("unreachable")
 
 
 def parse_generated_episode(

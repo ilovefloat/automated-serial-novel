@@ -480,6 +480,51 @@ class PipelineStageTests(unittest.TestCase):
         )
         self.assertEqual(generated["central_scene"], "세척실 첫 교대")
         self.assertEqual(client.models.calls[0][2].response_mime_type, "application/json")
+        self.assertEqual(client.models.calls[0][2].max_output_tokens, 8192)
+
+    def test_malformed_plan_json_is_regenerated_once(self) -> None:
+        client = SimpleNamespace(
+            models=ProbeModels(
+                {
+                    "gemini-test": [
+                        '{"continuation_point": "잘린 응답',
+                        json.dumps(valid_plan(), ensure_ascii=False),
+                    ]
+                }
+            )
+        )
+        generated = generate_scene_plan(
+            client,
+            "gemini-test",
+            {"history": [], "recent_scene_fingerprints": []},
+            1,
+        )
+        self.assertEqual(generated["central_scene"], "세척실 첫 교대")
+        self.assertEqual(len(client.models.calls), 2)
+        self.assertIn(
+            "직전 계획 응답은 불완전",
+            client.models.calls[1][1],
+        )
+
+    def test_malformed_plan_json_retry_is_limited(self) -> None:
+        client = SimpleNamespace(
+            models=ProbeModels(
+                {
+                    "gemini-test": [
+                        '{"continuation_point": "첫 번째 잘림',
+                        '{"continuation_point": "두 번째 잘림',
+                    ]
+                }
+            )
+        )
+        with self.assertRaisesRegex(ValueError, "JSON 파싱 실패"):
+            generate_scene_plan(
+                client,
+                "gemini-test",
+                {"history": [], "recent_scene_fingerprints": []},
+                1,
+            )
+        self.assertEqual(len(client.models.calls), 2)
 
     def test_body_stage_uses_plan_and_returns_separate_state(self) -> None:
         public = "# 세척실\n\n" + ("물비린내가 바닥에 남아 있었다. " * 80)
