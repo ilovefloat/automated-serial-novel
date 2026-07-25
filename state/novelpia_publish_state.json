@@ -1,14 +1,15 @@
 {
-  "last_success_episode": 1,
-  "last_success_at": "2026-07-25T05:06:26Z",
-  "episode_path": "docs/episodes/001.md",
-  "title": "회색 빛의 간격",
-  "published_url": "",
-  "publish_status": "published_manually",
+  "last_success_episode": 2,
+  "last_success_at": "2026-07-25T15:36:34+00:00",
+  "episode_path": "docs/episodes/002.md",
+  "title": "삼백 원짜리 도장",
+  "published_url": "https://novelpia.com/viewer/5897551",
+  "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
   "published_episodes": [
-    1
+    1,
+    2
   ],
   "unknown_result_episodes": []
 }
