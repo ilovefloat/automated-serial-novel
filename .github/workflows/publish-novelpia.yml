@@ -1,0 +1,207 @@
+name: Publish episode to Novelpia
+
+on:
+  workflow_dispatch:
+    inputs:
+      preview_only:
+        description: "Fill and validate the editor without clicking 작성완료"
+        required: false
+        default: true
+        type: boolean
+      episode_path:
+        description: "Repository-relative docs/episodes/*.md path (optional for session-only)"
+        required: false
+        type: string
+      force_republish:
+        description: "Allow a manual retry of a published or unknown-result episode"
+        required: false
+        default: false
+        type: boolean
+      refresh_session_only:
+        description: "Validate and refresh the session without loading an episode"
+        required: false
+        default: false
+        type: boolean
+  workflow_call:
+    inputs:
+      preview_only:
+        required: false
+        default: true
+        type: boolean
+      episode_path:
+        required: false
+        type: string
+      force_republish:
+        required: false
+        default: false
+        type: boolean
+      refresh_session_only:
+        required: false
+        default: false
+        type: boolean
+    secrets:
+      NOVELPIA_AUTH_STATE_B64:
+        required: true
+      GH_SECRET_UPDATE_TOKEN:
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: novelpia-publish
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      AUTH_PATH: ${{ runner.temp }}/novelpia-auth.json
+      REFRESHED_AUTH_PATH: ${{ runner.temp }}/novelpia-auth-refreshed.json
+      PREVIEW_PATH: preview/novelpia-editor.png
+      PUBLISH_STATE: state/novelpia_publish_state.json
+
+    steps:
+      - name: Checkout pushed main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Python and Chromium dependencies
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Restore storage state without logging it
+        id: restore_auth
+        continue-on-error: true
+        env:
+          AUTH_STATE_B64: ${{ secrets.NOVELPIA_AUTH_STATE_B64 }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64
+          import os
+          from pathlib import Path
+
+          value = os.environ.get("AUTH_STATE_B64", "")
+          if not value:
+              raise SystemExit("NOVELPIA_AUTH_MISSING")
+          try:
+              decoded = base64.b64decode(value, validate=True)
+          except ValueError:
+              raise SystemExit("NOVELPIA_AUTH_MISSING")
+          if not decoded:
+              raise SystemExit("NOVELPIA_AUTH_MISSING")
+          Path(os.environ["AUTH_PATH"]).write_bytes(decoded)
+          PY
+
+      - name: Select safe upload mode
+        id: mode
+        env:
+          REQUESTED_PREVIEW: ${{ inputs.preview_only }}
+          REPOSITORY_PUBLISH_ENABLED: ${{ vars.NOVELPIA_PUBLISH_ENABLED }}
+        shell: bash
+        run: |
+          if [[ "${REQUESTED_PREVIEW}" == "true" || "${REPOSITORY_PUBLISH_ENABLED}" != "true" ]]; then
+            echo "preview=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "preview=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Fill, validate, and optionally publish
+        id: upload
+        if: ${{ always() }}
+        continue-on-error: true
+        env:
+          NOVELPIA_EDITOR_URL: ${{ vars.NOVELPIA_EDITOR_URL }}
+          NOVELPIA_PUBLISH_ENABLED: ${{ vars.NOVELPIA_PUBLISH_ENABLED }}
+          EPISODE_PATH: ${{ inputs.episode_path }}
+          PREVIEW_ONLY: ${{ steps.mode.outputs.preview }}
+          FORCE_REPUBLISH: ${{ inputs.force_republish }}
+          REFRESH_SESSION_ONLY: ${{ inputs.refresh_session_only }}
+        shell: bash
+        run: |
+          args=(
+            --auth-state "${AUTH_PATH}"
+            --refreshed-auth "${REFRESHED_AUTH_PATH}"
+            --state "${PUBLISH_STATE}"
+            --screenshot "${PREVIEW_PATH}"
+          )
+          if [[ -n "${EPISODE_PATH}" ]]; then
+            args+=(--episode-path "${EPISODE_PATH}")
+          fi
+          if [[ "${PREVIEW_ONLY}" == "true" ]]; then
+            args+=(--preview-only)
+          fi
+          if [[ "${FORCE_REPUBLISH}" == "true" ]]; then
+            args+=(--force-republish)
+          fi
+          if [[ "${REFRESH_SESSION_ONLY}" == "true" ]]; then
+            args+=(--refresh-session-only)
+          fi
+          python scripts/upload_novelpia.py "${args[@]}"
+
+      - name: Refresh repository session secret
+        id: refresh_secret
+        if: ${{ steps.upload.outcome == 'success' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GH_SECRET_UPDATE_TOKEN }}
+        run: |
+          python scripts/refresh_novelpia_secret.py \
+            "${REFRESHED_AUTH_PATH}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --state "${PUBLISH_STATE}"
+
+      - name: Check for safe preview artifact
+        id: preview_artifact
+        if: ${{ steps.upload.outcome == 'success' && steps.mode.outputs.preview == 'true' && inputs.refresh_session_only != true }}
+        shell: bash
+        run: |
+          if [[ -f "${PREVIEW_PATH}" ]]; then
+            echo "available=true" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Upload editor-only preview screenshot
+        if: ${{ steps.preview_artifact.outputs.available == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: novelpia-editor-preview
+          path: preview/novelpia-editor.png
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Commit independent publish state
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          git config user.name "serial-novel-bot"
+          git config user.email "serial-novel-bot@users.noreply.github.com"
+          git add state/novelpia_publish_state.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "Update Novelpia publish state"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Remove all temporary authentication material
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          rm -f -- "${AUTH_PATH}" "${REFRESHED_AUTH_PATH}"
+          rm -rf -- "${RUNNER_TEMP}/novelpia-browser-profile"
+
+      - name: Preserve upload failure after state and cleanup
+        if: ${{ steps.upload.outcome != 'success' }}
+        run: |
+          echo "Novelpia upload failed; generated GitHub Pages commit remains intact." >&2
+          exit 1

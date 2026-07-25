@@ -66,6 +66,36 @@ def validate_workflow(path: Path) -> list[str]:
     return [f"{path}: {error}" for error in errors]
 
 
+def validate_novelpia_workflow(path: Path) -> list[str]:
+    text = path.read_text(encoding="utf-8")
+    data = yaml.load(text, Loader=yaml.BaseLoader)
+    errors: list[str] = []
+    triggers = data.get("on", {})
+    if "workflow_dispatch" not in triggers or "workflow_call" not in triggers:
+        errors.append("manual and reusable triggers are required")
+    if data.get("permissions") != {"contents": "write"}:
+        errors.append("workflow permissions must be exactly contents: write")
+    if not data.get("concurrency"):
+        errors.append("workflow concurrency is required")
+    required_fragments = (
+        "${{ secrets.NOVELPIA_AUTH_STATE_B64 }}",
+        "${{ secrets.GH_SECRET_UPDATE_TOKEN }}",
+        "${{ vars.NOVELPIA_EDITOR_URL }}",
+        "${{ vars.NOVELPIA_PUBLISH_ENABLED }}",
+        "python -m playwright install --with-deps chromium",
+        "path: preview/novelpia-editor.png",
+        "Remove all temporary authentication material",
+    )
+    for fragment in required_fragments:
+        if fragment not in text:
+            errors.append(f"missing required workflow fragment: {fragment}")
+    if re.search(r"path:\s*(?:\.|/|secrets/)\s*$", text, re.MULTILINE):
+        errors.append("artifact path is too broad or sensitive")
+    if re.search(r"gh secret set[^\n]*NOVELPIA_AUTH_STATE_B64[^\n]+\$\{", text):
+        errors.append("secret value may be exposed in a command argument")
+    return [f"{path}: {error}" for error in errors]
+
+
 def main() -> int:
     errors: list[str] = []
     for relative in (
@@ -75,6 +105,11 @@ def main() -> int:
     ):
         errors.extend(validate_html(ROOT / relative))
     errors.extend(validate_workflow(ROOT / ".github/workflows/generate.yml"))
+    errors.extend(
+        validate_novelpia_workflow(
+            ROOT / ".github/workflows/publish-novelpia.yml"
+        )
+    )
 
     state = json.loads(
         (ROOT / "state/story_state.json").read_text(encoding="utf-8")
@@ -116,6 +151,37 @@ def main() -> int:
         )
     if not (ROOT / "prompts/plan.md").is_file():
         errors.append("prompts/plan.md: private planning prompt is required")
+    publish_state = json.loads(
+        (ROOT / "state/novelpia_publish_state.json").read_text(encoding="utf-8")
+    )
+    required_publish_fields = {
+        "last_success_episode",
+        "last_success_at",
+        "episode_path",
+        "title",
+        "published_url",
+        "publish_status",
+        "last_error_code",
+        "session_refresh_status",
+        "unknown_result_episodes",
+    }
+    missing_publish_fields = sorted(required_publish_fields - publish_state.keys())
+    if missing_publish_fields:
+        errors.append(
+            "state/novelpia_publish_state.json: missing fields "
+            f"{missing_publish_fields}"
+        )
+    ignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
+    for pattern in (
+        "secrets/",
+        "playwright/.auth/",
+        "*.auth.json",
+        "novelpia-auth*.json",
+        "playwright-report/",
+        "test-results/",
+    ):
+        if pattern not in ignore:
+            errors.append(f".gitignore: missing sensitive pattern {pattern}")
 
     source_roots = (
         ROOT / ".github",

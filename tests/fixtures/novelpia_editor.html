@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>Mock Novelpia Summernote Editor</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    #content_subject { width: 700px; padding: 8px; }
+    .note-editor { width: 700px; margin-top: 12px; border: 1px solid #aaa; }
+    .note-editable { min-height: 240px; padding: 12px; white-space: normal; }
+    .note-codable { display: none; }
+    #submit_btn { margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <main id="write-form">
+    <input id="content_subject" type="text" value="">
+    <div class="note-editor">
+      <div
+        class="note-editable"
+        contenteditable="true"
+        data-placeholder="회차 내용을 입력해 주세요"
+      ></div>
+      <textarea class="note-codable"></textarea>
+    </div>
+    <button id="submit_btn" type="button">작성완료</button>
+  </main>
+  <script>
+    window.submitCount = 0;
+    document.querySelector("#submit_btn").addEventListener("click", () => {
+      window.submitCount += 1;
+      if (window.mockSubmitResult === "success") {
+        const message = document.createElement("div");
+        message.textContent = "작성이 성공적으로 등록 완료되었습니다.";
+        document.body.appendChild(message);
+      }
+    });
+
+    function jqueryMock(element) {
+      return {
+        summernote(command, html) {
+          if (command !== "code") throw new Error("unexpected command");
+          element.innerHTML = html;
+          element.dispatchEvent(new Event("input", { bubbles: true }));
+          element.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      };
+    }
+    jqueryMock.fn = { summernote() {} };
+    window.jQuery = window.$ = jqueryMock;
+  </script>
+</body>
+</html>

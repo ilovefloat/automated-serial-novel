@@ -23,6 +23,8 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    outputs:
+      episode_path: ${{ steps.episode_result.outputs.episode_path }}
 
     steps:
       - name: Checkout repository
@@ -56,6 +58,7 @@ jobs:
           fi
 
       - name: Generate next episode
+        id: generate_episode
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
@@ -63,10 +66,35 @@ jobs:
         shell: bash
         run: |
           if [[ "${PREVIEW}" == "true" ]]; then
-            python scripts/generate_episode.py --preview-dir preview
+            python scripts/generate_episode.py \
+              --preview-dir preview \
+              --result-json "${RUNNER_TEMP}/generation-result.json"
           else
-            python scripts/generate_episode.py
+            python scripts/generate_episode.py \
+              --result-json "${RUNNER_TEMP}/generation-result.json"
           fi
+
+      - name: Export exact generated episode path
+        id: episode_result
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          result = json.loads(
+              (Path(os.environ["RUNNER_TEMP"]) / "generation-result.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+          path = result["episode_path"]
+          if result["mode"] == "publish":
+              if not path.startswith("docs/episodes/") or not path.endswith(".md"):
+                  raise SystemExit("unsafe generated episode path")
+              with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+                  output.write(f"episode_path={path}\n")
+          PY
 
       - name: Rebuild episode index
         if: ${{ steps.mode.outputs.preview == 'false' }}
@@ -95,3 +123,14 @@ jobs:
           episode=$(python -c "import json; print(json.load(open('state/story_state.json', encoding='utf-8'))['next_episode'] - 1)")
           git commit -m "Publish episode ${episode}"
           git push origin HEAD:main
+
+  publish-novelpia:
+    if: ${{ needs.generate.outputs.episode_path != '' }}
+    needs: generate
+    uses: ./.github/workflows/publish-novelpia.yml
+    with:
+      episode_path: ${{ needs.generate.outputs.episode_path }}
+      preview_only: false
+      force_republish: false
+      refresh_session_only: false
+    secrets: inherit

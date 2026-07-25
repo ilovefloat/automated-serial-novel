@@ -1196,6 +1196,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         type=Path,
         help="저장소를 갱신하지 않고 이 디렉터리에 결과 스냅샷 저장",
     )
+    parser.add_argument(
+        "--result-json",
+        type=Path,
+        help="생성된 정확한 에피소드 경로와 번호를 기록할 JSON 파일",
+    )
     return parser.parse_args(argv)
 
 
@@ -1376,6 +1381,24 @@ def main(argv: list[str] | None = None) -> int:
         raise
 
     mode = "preview" if args.preview_dir is not None else "publish"
+    if args.result_json is not None:
+        try:
+            reported_path = output_path.resolve().relative_to(ROOT.resolve()).as_posix()
+        except ValueError:
+            reported_path = str(output_path.resolve())
+        atomic_write_text(
+            args.result_json,
+            json.dumps(
+                {
+                    "episode": episode_number,
+                    "episode_path": reported_path,
+                    "mode": mode,
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n",
+        )
     print(f"생성 완료 ({mode}): {output_path}")
     print(f"제목: {title}")
     return 0

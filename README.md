@@ -30,6 +30,11 @@ AI를 악당이나 자아를 얻은 존재로 만들지 않는다. 자동화의 
 - `docs/episodes/`: 공개 Markdown 원고
 - `docs/index.html`, `docs/episode.html`: GitHub Pages 연재 화면
 - `.github/workflows/generate.yml`: 수동·일일 생성과 커밋
+- `.github/workflows/publish-novelpia.yml`: storage state 기반 preview·노벨피아 게시
+- `scripts/novelpia_content.py`: 에피소드 경로·front matter·Markdown 안전 변환
+- `scripts/upload_novelpia.py`: Summernote 입력 검증·단일 제출·성공 판정
+- `scripts/novelpia_login.py`: 로컬 최초 Google 로그인과 storage state 저장
+- `state/novelpia_publish_state.json`: 성공·불명 결과·세션 갱신 상태
 - `tests/`: API 호출이 없는 단위 테스트
 
 프롬프트에는 최근 20편의 압축 요약·서사 지문, 최대 60개의 확정 사실, 현재
@@ -243,3 +248,110 @@ python -m py_compile scripts/generate_episode.py scripts/narrative_control.py sc
 
 실제 API 연결은 로컬에 키가 있을 때 preview로 짧게 확인한다. 테스트와 검증
 스크립트는 API 키의 값이나 환경 전체를 출력하지 않는다.
+
+## 노벨피아 자동 업로드
+
+GitHub Pages용 에피소드가 생성·검증되고 `origin/main`에 push된 뒤에만 별도
+`Publish episode to Novelpia` workflow가 실행된다. 생성기가 방금 만든 정확한
+`docs/episodes/NNN.md` 경로를 JSON과 Actions output으로 넘기므로 디렉터리의
+최신 파일을 추측하지 않는다. 노벨피아 단계가 실패해도 앞서 push된 소설과
+Pages 커밋은 유지된다.
+
+업로더는 YAML front matter와 첫 회차 제목 heading을 본문에서 제외하고 순수
+제목만 `#content_subject`에 넣는다. 본문은 Markdown을 문단·줄바꿈·강조·인용·
+구분선·목록 HTML로 변환한 뒤 위험 태그, 이벤트 속성, style, 외부 추적 요소와
+위험 URL을 제거한다. 보이는 Summernote `.note-editable`에 공식 API로 입력하며,
+API가 없을 때만 DOM fallback을 쓴다. 숨겨진 `.note-codable`이나 직접 HTTP
+submit은 사용하지 않는다.
+
+### 최초 로그인은 로컬에서만
+
+Google 이메일·비밀번호를 코드, secret, 환경변수로 받지 않는다. Google 로그인,
+CAPTCHA와 추가 인증은 자동화하지 않는다. 로컬 PC의 보이는 Chrome/Chromium에서
+사용자가 직접 로그인한 뒤 storage state만 저장한다.
+
+```powershell
+python -m pip install -r requirements.txt
+python -m playwright install chromium
+python scripts\novelpia_login.py
+```
+
+성공하면 `secrets/novelpia-auth.json`이 생성된다. `secrets/`와 인증 파일 패턴은
+`.gitignore`에 포함되어 있으며 이 파일을 커밋하거나 artifact로 올리면 안 된다.
+
+Repository의 **Settings → Secrets and variables → Actions → Secrets**에 다음을
+등록한다.
+
+- `NOVELPIA_AUTH_STATE_B64`: 로컬 storage state의 Base64
+- `GH_SECRET_UPDATE_TOKEN`: 이 저장소만 선택하고 repository **Secrets:
+  Read and write** 권한만 부여한 fine-grained PAT
+- 기존 `GEMINI_API_KEY`
+
+세션 Secret 등록:
+
+```powershell
+$auth = [Convert]::ToBase64String(
+    [IO.File]::ReadAllBytes(".\secrets\novelpia-auth.json")
+)
+
+$auth | gh secret set NOVELPIA_AUTH_STATE_B64
+```
+
+인증 JSON과 Base64 값은 로그나 명령 인자로 출력하지 않는다. Actions는 secret을
+환경변수에서 읽어 runner 임시 JSON으로 복원하고 Chromium context에 전달한다.
+작업 종료 시 성공 여부와 관계없이 원본·갱신 인증 파일과 임시 브라우저 프로필을
+삭제하며 인증 파일은 artifact 대상에 포함하지 않는다.
+
+### Repository Variables와 preview
+
+같은 화면의 **Variables**에 다음을 설정할 수 있다.
+
+- `NOVELPIA_EDITOR_URL`: 생략 시
+  `https://novelpia.com/mynovel/all/write/442975`
+- `NOVELPIA_PUBLISH_ENABLED`: 생략 시 `false`
+
+**Actions → Publish episode to Novelpia → Run workflow**에서
+`episode_path`에 `docs/episodes/NNN.md`를 넣고 `preview_only=true`로 실행한다.
+preview는 제목·본문 입력과 재검증까지만 수행하고 `#submit_btn`을 누르지 않는다.
+계정 영역이 아닌 제목과 편집기 경계만 캡처한 `novelpia-editor-preview`
+스크린샷 artifact를 남긴다. `NOVELPIA_PUBLISH_ENABLED=false`이면
+`preview_only=false`를 선택해도 안전하게 preview로 강제된다.
+
+실제 게시를 활성화하려면 먼저 preview를 확인한 뒤
+`NOVELPIA_PUBLISH_ENABLED=true`로 설정하고 `preview_only=false`로 실행한다.
+작성 URL·selector·제목·본문 앞뒤·placeholder·버튼 상태를 모두 다시 검사한
+경우에만 실제 `#submit_btn`을 한 번 클릭한다. 명확한 확인/등록/작성완료 dialog
+또는 보이는 modal 내부 버튼만 처리하며 결과가 불명확해도 다시 클릭하지 않는다.
+
+성공은 단순 click 완료가 아니라 작성 페이지 이탈, 명확한 성공 메시지, 회차
+관리/게시 URL, 관련 성공 응답을 조합해 판정한다. 확정할 수 없으면
+`NOVELPIA_SUBMIT_RESULT_UNKNOWN`으로 기록한다. 성공한 회차와 결과 불명 회차는
+`state/novelpia_publish_state.json`의 `published_episodes`와
+`unknown_result_episodes`로 누적 추적해 자동 재게시를 막는다. 사람이 노벨피아
+회차 목록을 확인한 뒤 꼭 필요할 때만 수동 workflow의
+`force_republish=true`를 사용한다.
+
+preview 또는 확정 게시가 성공하면 최신 BrowserContext storage state를
+IndexedDB 포함 방식으로 다시 저장한다. 유효한 JSON, novelpia cookie/origin,
+GitHub Secret 크기를 검사한 후 `GH_TOKEN`으로
+`NOVELPIA_AUTH_STATE_B64`를 STDIN 갱신한다. 세션 갱신 실패는 이미 성공한 게시를
+실패로 바꾸지 않으며 `session_refresh_status`에 별도로 기록한다.
+`refresh_session_only=true`는 에피소드 없이 세션만 검증·갱신한다. 세션이 완전히
+만료되거나 Google 로그인/CAPTCHA가 나타나면 우회하지 않고 실패하므로 로컬에서
+`python scripts\novelpia_login.py`를 다시 실행해 secret을 재등록해야 한다.
+
+### 노벨피아 테스트와 운영 주의
+
+로컬 테스트는 외부 게시 요청 없이 직접 작성한 Summernote fixture를 사용한다.
+
+```powershell
+python -m pip install -r requirements-dev.txt
+python -m playwright install chromium
+python -m unittest discover -s tests -v
+python scripts\validate_repository.py
+```
+
+실제 사이트 smoke test는 별도의 명시적 허용 없이는 실행하지 않는다. 노벨피아
+DOM, Summernote 구성, 로그인 흐름이나 운영 정책이 바뀌면 안전을 위해 자동화가
+중단될 수 있다. 게시 전 preview와 노벨피아 관리 화면을 확인해야 하며 게시물과
+계정 사용의 최종 책임은 사용자에게 있다.

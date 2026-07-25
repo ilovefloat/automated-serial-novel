@@ -4,3 +4,9 @@ __pycache__/
 .venv/
 preview/
 .DS_Store
+secrets/
+playwright/.auth/
+*.auth.json
+novelpia-auth*.json
+playwright-report/
+test-results/
