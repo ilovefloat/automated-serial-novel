@@ -4,8 +4,8 @@
   "episode_path": "",
   "title": "",
   "published_url": "",
-  "publish_status": "never",
-  "last_error_code": "",
+  "publish_status": "failed",
+  "last_error_code": "NOVELPIA_VALIDATION_FAILED",
   "session_refresh_status": "never",
   "published_episodes": [],
   "unknown_result_episodes": []
