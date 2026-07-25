@@ -72,10 +72,11 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      - name: Install Python and Chromium dependencies
-        run: |
-          python -m pip install -r requirements-dev.txt
-          python -m playwright install --with-deps chromium
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Install Playwright Chromium
+        run: python -m playwright install --with-deps chromium
 
       - name: Initialize temporary authentication paths
         shell: bash

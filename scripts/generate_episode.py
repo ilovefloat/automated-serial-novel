@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import os
 import re
@@ -108,6 +109,11 @@ MODEL_INCOMPATIBLE_MESSAGE_MARKERS = (
 )
 
 T = TypeVar("T")
+
+
+def log(message: str) -> None:
+    """Emit ordered progress output even when Actions captures a pipe."""
+    print(message, flush=True)
 
 
 class ModelProbeError(RuntimeError):
@@ -271,10 +277,9 @@ def ordered_model_candidates(
                 ),
             }
             initial_failures.append(failure)
-            print(
+            log(
                 f"경고: GEMINI_MODEL {requested!r} 검증 실패 "
-                f"({failure['status_code']}): {failure['reason']}; 자동 fallback을 시도합니다.",
-                file=sys.stderr,
+                f"({failure['status_code']}): {failure['reason']}; 자동 fallback을 시도합니다."
             )
 
     automatic = {
@@ -339,7 +344,20 @@ def error_status_code(exc: BaseException) -> int | None:
 
 
 def safe_error_reason(exc: BaseException, limit: int = 300) -> str:
-    reason = " ".join(str(exc).split())
+    raw_message = getattr(exc, "message", None)
+    reason = " ".join(
+        str(raw_message if isinstance(raw_message, str) else exc).split()
+    )
+    # google-genai exceptions can stringify the entire response dictionary.
+    # Keep only a short, human-readable message instead of response bodies.
+    message_match = re.search(
+        r"['\"]message['\"]\s*:\s*['\"]([^'\"]+)", reason
+    )
+    if message_match:
+        reason = message_match.group(1)
+    elif reason.startswith(("{", "[")):
+        reason = exc.__class__.__name__
+    reason = re.sub(r"\s*\{.*$", "", reason)
     secret = os.environ.get("GEMINI_API_KEY") or ""
     if secret:
         reason = reason.replace(secret, "[REDACTED]")
@@ -401,7 +419,7 @@ def probe_and_select_model(
         )
 
     for model in candidates:
-        print(f"모델 probe 시작: {model}")
+        log(f"모델 probe 시작: {model}")
         try:
             probe_model(client, model, sleep=sleep)
         except Exception as exc:
@@ -412,25 +430,22 @@ def probe_and_select_model(
                 "reason": safe_error_reason(exc),
             }
             failures.append(failure)
-            print(
+            log(
                 f"모델 probe 실패: {model} "
-                f"status={failure['status_code']} reason={failure['reason']}",
-                file=sys.stderr,
+                f"status={failure['status_code']} reason={failure['reason']}"
             )
             if is_transient_error(exc):
                 transient_failures.append(failure)
-                print(
+                log(
                     f"경고: {model}의 일시적 오류가 제한 재시도 후에도 계속되어 "
-                    "이번 실행에서 다음 후보를 probe합니다.",
-                    file=sys.stderr,
+                    "이번 실행에서 다음 후보를 probe합니다."
                 )
                 continue
             if is_model_unavailable_error(exc) or is_model_incompatible_error(exc):
                 if configured and model == normalize_model_name(configured):
-                    print(
+                    log(
                         f"경고: GEMINI_MODEL {model!r}을 실제 호출할 수 없어 "
-                        "자동 fallback을 시도합니다.",
-                        file=sys.stderr,
+                        "자동 fallback을 시도합니다."
                     )
                 continue
             raise ModelProbeError(
@@ -438,7 +453,7 @@ def probe_and_select_model(
                 f"{model} status={status or 'UNKNOWN'}",
                 failures,
             ) from exc
-        print(f"모델 probe 성공: {model}")
+        log(f"모델 probe 성공: {model}")
         return model, [model], failures
 
     if transient_failures:
@@ -467,6 +482,7 @@ def model_catalog_document(
     generate_catalog = generation_models(catalog)
     return {
         "checked_at": checked_at.isoformat(),
+        "models": copy.deepcopy(catalog),
         "listed_models": [item["name"] for item in catalog],
         "generate_content_models": [
             item["name"] for item in generate_catalog
@@ -481,6 +497,23 @@ def model_catalog_document(
         ),
         "model_details": catalog,
     }
+
+
+def log_model_catalog_summary(
+    catalog: list[dict[str, Any]],
+    candidates: list[str],
+    debug: bool = False,
+) -> None:
+    listed_names = [item["name"] for item in catalog]
+    generate_names = [item["name"] for item in generation_models(catalog)]
+    log(
+        f"models.list() 결과: 전체 {len(listed_names)}개, "
+        f"generateContent {len(generate_names)}개"
+    )
+    log(f"후보 모델: {', '.join(candidates)}")
+    if debug:
+        log(f"debug 전체 모델: {', '.join(listed_names)}")
+        log(f"debug generateContent 모델: {', '.join(generate_names)}")
 
 
 def episode_numbers(paths: Iterable[Path]) -> list[int]:
@@ -703,30 +736,121 @@ def validate_state_update(update: Any) -> dict[str, Any]:
     return update
 
 
+def _progress_fallback(arc: str, plan: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "arc": arc,
+        "stage": "계획에 따른 진행",
+        "change": str(plan["arc_impact"]),
+        "next_possible_change": str(plan["expected_ending_point"]),
+        "withheld_information": list(plan["withhold_information"]),
+        "current_pressure": str(plan["central_scene"]),
+        "long_term_outcome": str(plan["arc_impact"]),
+        "on_hold": False,
+    }
+
+
+def normalize_update_from_plan(
+    update: Any, plan: dict[str, Any]
+) -> tuple[dict[str, Any], list[str]]:
+    """Overlay plan-owned structural metadata onto a body state update."""
+    if not isinstance(update, dict):
+        raise ValueError("state_update는 JSON 객체여야 합니다.")
+    normalized = copy.deepcopy(update)
+    warnings: list[str] = []
+
+    raw_primary = normalized.get("primary_arc_progress")
+    raw_supporting = normalized.get("supporting_arc_progress")
+    candidates = [
+        progress
+        for progress in (
+            [raw_primary] if isinstance(raw_primary, dict) else []
+        )
+        + (raw_supporting if isinstance(raw_supporting, list) else [])
+        if isinstance(progress, dict)
+    ]
+
+    def choose_progress(arc: str, used: set[int]) -> dict[str, Any]:
+        for progress in candidates:
+            if id(progress) not in used and progress.get("arc") == arc:
+                used.add(id(progress))
+                result = copy.deepcopy(progress)
+                result["arc"] = arc
+                return result
+        for progress in candidates:
+            if id(progress) not in used:
+                used.add(id(progress))
+                result = _progress_fallback(arc, plan)
+                for field, value in progress.items():
+                    if field != "arc" and value not in (None, "", []):
+                        result[field] = copy.deepcopy(value)
+                result["arc"] = arc
+                return result
+        return _progress_fallback(arc, plan)
+
+    body_primary = (
+        raw_primary.get("arc") if isinstance(raw_primary, dict) else None
+    )
+    body_supporting = [
+        progress.get("arc")
+        for progress in raw_supporting or []
+        if isinstance(progress, dict)
+    ] if isinstance(raw_supporting, list) else []
+    if body_primary != plan["active_arc"]:
+        warnings.append(
+            "primary arc metadata differs or is missing "
+            f"(body={body_primary!r}, plan={plan['active_arc']!r})"
+        )
+    if set(body_supporting) != set(plan["supporting_arcs"]):
+        warnings.append(
+            "supporting arc metadata differs, is reordered, or is missing"
+        )
+
+    used_progress: set[int] = set()
+    normalized["primary_arc_progress"] = choose_progress(
+        str(plan["active_arc"]), used_progress
+    )
+    normalized["supporting_arc_progress"] = [
+        choose_progress(str(arc), used_progress)
+        for arc in plan["supporting_arcs"]
+    ]
+
+    plan_fields: dict[str, Any] = {
+        "locations": [plan["location"]],
+        "character_combination": list(plan["main_characters"]),
+        "central_labor": plan["central_labor"],
+        "conflict_types": [plan["conflict_type"]],
+        "social_themes": [plan["social_theme"]],
+        "document_formats": [plan["document_format"]],
+        "ai_interaction_types": [plan["ai_interaction_type"]],
+        "narrative_mode": plan["narrative_mode"],
+        "narrative_pace": plan["narrative_pace"],
+        "narrative_function": plan["narrative_function"],
+        "opening_pattern": plan["opening_pattern"],
+        "ending_pattern": plan["ending_pattern"],
+        "direct_continuation": plan["direct_continuation"],
+        "motif_cooldown_updates": list(plan["motifs_used"]),
+    }
+    for field, planned_value in plan_fields.items():
+        body_value = normalized.get(field)
+        if body_value != planned_value:
+            warnings.append(
+                f"{field} metadata differs or is missing; plan value applied"
+            )
+        normalized[field] = copy.deepcopy(planned_value)
+    return normalized, warnings
+
+
 def validate_update_against_plan(
     update: dict[str, Any], plan: dict[str, Any]
-) -> None:
-    if update["direct_continuation"] != plan["direct_continuation"]:
-        raise ValueError("본문 상태와 계획의 직접 연속 여부가 다릅니다.")
-    if update["primary_arc_progress"]["arc"] != plan["active_arc"]:
-        raise ValueError("본문 상태와 계획의 주요 아크가 다릅니다.")
-    if {
-        progress["arc"] for progress in update["supporting_arc_progress"]
-    } != set(plan["supporting_arcs"]):
-        raise ValueError("본문 상태와 계획의 보조 아크가 다릅니다.")
-    if update["narrative_mode"] != plan["narrative_mode"]:
-        raise ValueError("본문 상태와 계획의 서술 형식이 다릅니다.")
-    if update["narrative_pace"] != plan["narrative_pace"]:
-        raise ValueError("본문 상태와 계획의 서사 속도가 다릅니다.")
-    if update["narrative_function"] != plan["narrative_function"]:
-        raise ValueError("본문 상태와 계획의 서사 기능이 다릅니다.")
-    if not set(update["motif_cooldown_updates"]).issubset(
-        set(plan["motifs_used"])
-    ):
-        raise ValueError("계획에 없던 냉각 소재가 본문 상태에 추가되었습니다.")
+) -> list[str]:
+    """Return metadata warnings; plan/body string differences are non-fatal."""
+    _, warnings = normalize_update_from_plan(update, plan)
+    return warnings
 
 
-def parse_response(raw: str) -> tuple[str, dict[str, Any]]:
+def parse_response(
+    raw: str, scene_plan: dict[str, Any] | None = None
+) -> tuple[str, dict[str, Any]]:
     if not raw or not raw.strip():
         raise ValueError("Gemini가 빈 응답을 반환했습니다.")
     cleaned = strip_outer_fence(raw)
@@ -743,7 +867,12 @@ def parse_response(raw: str) -> tuple[str, dict[str, Any]]:
     public_text = strip_outer_fence(public_text)
     if "```" in public_text:
         raise ValueError("공개 본문에 허용되지 않은 코드펜스가 포함되어 있습니다.")
-    return public_text, validate_state_update(payload.get("state_update"))
+    update: Any = payload.get("state_update")
+    if scene_plan is not None:
+        update, warnings = normalize_update_from_plan(update, scene_plan)
+        for warning in warnings:
+            log(f"메타데이터 경고: {warning}")
+    return public_text, validate_state_update(update)
 
 
 def extract_title_and_body(public_text: str) -> tuple[str, str]:
@@ -774,7 +903,11 @@ def merge_state(
     similarity_report: dict[str, Any] | None = None,
     generated_at: datetime | None = None,
 ) -> dict[str, Any]:
-    validate_update_against_plan(update, scene_plan)
+    update, metadata_warnings = normalize_update_from_plan(update, scene_plan)
+    update = validate_state_update(update)
+    for warning in metadata_warnings:
+        log(f"상태 병합 메타데이터 경고: {warning}")
+    log("상태 병합: 계획의 구조 메타데이터를 authoritative source로 적용")
     merged = migrate_story_state(state)
     history = merged.setdefault("history", [])
     if not isinstance(history, list):
@@ -868,10 +1001,9 @@ def call_with_retry(
             if not is_transient_error(exc) or attempt == attempts:
                 raise
             delay = 2 ** (attempt - 1)
-            print(
+            log(
                 f"{label} 일시 오류, {delay}초 후 재시도 "
-                f"({attempt}/{attempts - 1})",
-                file=sys.stderr,
+                f"({attempt}/{attempts - 1})"
             )
             sleep(delay)
     raise AssertionError("unreachable")
@@ -977,6 +1109,24 @@ def response_schema() -> dict[str, Any]:
             },
         },
     }
+    plan_owned_optional = {
+        "primary_arc_progress",
+        "supporting_arc_progress",
+        "locations",
+        "character_combination",
+        "central_labor",
+        "conflict_types",
+        "social_themes",
+        "document_formats",
+        "ai_interaction_types",
+        "narrative_mode",
+        "narrative_pace",
+        "narrative_function",
+        "opening_pattern",
+        "ending_pattern",
+        "direct_continuation",
+        "motif_cooldown_updates",
+    }
     return {
         "type": "object",
         "required": ["public_markdown", "state_update"],
@@ -984,7 +1134,11 @@ def response_schema() -> dict[str, Any]:
             "public_markdown": {"type": "string"},
             "state_update": {
                 "type": "object",
-                "required": list(state_properties),
+                "required": [
+                    field
+                    for field in state_properties
+                    if field not in plan_owned_optional
+                ],
                 "properties": state_properties,
             },
         },
@@ -1083,8 +1237,10 @@ def generate_scene_plan(
     return validate_scene_plan(parse_json_object(raw, "장면 계획"))
 
 
-def parse_generated_episode(raw: str) -> tuple[str, str, dict[str, Any]]:
-    public_text, update = parse_response(raw)
+def parse_generated_episode(
+    raw: str, scene_plan: dict[str, Any] | None = None
+) -> tuple[str, str, dict[str, Any]]:
+    public_text, update = parse_response(raw, scene_plan)
     title, body = extract_title_and_body(public_text)
     return title, body, update
 
@@ -1154,6 +1310,126 @@ def revision_feedback(
     return json.dumps(instructions, ensure_ascii=False, indent=2)
 
 
+def _meaningful_tokens(value: str) -> set[str]:
+    generic = {
+        "주인공",
+        "인물",
+        "장면",
+        "사건",
+        "행동",
+        "시작",
+        "계속",
+        "순간",
+        "대한",
+    }
+    particles = (
+        "으로부터",
+        "에게서",
+        "에서는",
+        "으로",
+        "에서",
+        "에게",
+        "까지",
+        "부터",
+        "처럼",
+        "하고",
+        "하며",
+        "한다",
+        "하는",
+        "했다",
+        "된다",
+        "하는",
+        "을",
+        "를",
+        "은",
+        "는",
+        "이",
+        "가",
+        "와",
+        "과",
+        "에",
+        "도",
+    )
+    tokens: set[str] = set()
+    for raw in re.findall(r"[가-힣A-Za-z0-9]+", value.lower()):
+        token = raw
+        for particle in particles:
+            if token.endswith(particle) and len(token) > len(particle) + 1:
+                token = token[: -len(particle)]
+                break
+        if len(token) >= 2 and token not in generic:
+            tokens.add(token)
+    return tokens
+
+
+def _concept_present(concept: str, text_tokens: set[str]) -> bool:
+    concept_tokens = _meaningful_tokens(concept)
+    if not concept_tokens:
+        return True
+    overlap = concept_tokens & text_tokens
+    return len(overlap) >= max(1, (len(concept_tokens) + 2) // 3)
+
+
+def body_plan_relevance_report(
+    title: str,
+    body: str,
+    plan: dict[str, Any],
+    state: dict[str, Any],
+) -> dict[str, Any]:
+    """Detect substantive divergence without comparing metadata labels."""
+    text_tokens = _meaningful_tokens(f"{title}\n{body}")
+    issues: list[str] = []
+
+    distinctive_characters = [
+        character
+        for character in plan.get("main_characters", [])
+        if _meaningful_tokens(str(character))
+    ]
+    if distinctive_characters and not any(
+        _concept_present(str(character), text_tokens)
+        for character in distinctive_characters
+    ):
+        issues.append("계획의 필수 인물이 한 명도 본문에 등장하지 않음")
+
+    required_actions = [
+        str(action)
+        for action in state.get("unresolved_immediate_actions", [])
+        if str(action).strip()
+    ]
+    missing_actions = [
+        action
+        for action in required_actions
+        if not _concept_present(action, text_tokens)
+    ]
+    if missing_actions:
+        issues.append(f"unfinished scene 필수 즉각 행동 누락: {missing_actions}")
+
+    event_concepts = [
+        str(plan.get("central_scene", "")),
+        str(plan.get("central_labor", "")),
+        *[str(item) for item in plan.get("changes", [])],
+    ]
+    if event_concepts and not any(
+        _concept_present(concept, text_tokens)
+        for concept in event_concepts
+        if concept.strip()
+    ):
+        issues.append("계획의 중심 사건이 본문에 없음")
+
+    forbidden_cooldowns = set(active_cooldowns(state)) - set(
+        plan.get("motifs_used", [])
+    )
+    repeated = [
+        motif
+        for motif in forbidden_cooldowns
+        if _concept_present(motif.replace("_", " "), text_tokens)
+    ]
+    if repeated:
+        issues.append(f"금지된 cooldown 소재를 중심 사건으로 사용: {repeated}")
+
+    return {"relevant": not issues, "issues": issues}
+
+
 def generate_episode_from_plan(
     client: genai.Client,
     model: str,
@@ -1164,17 +1440,26 @@ def generate_episode_from_plan(
     system_prompt = read_text(PROMPTS / "system.md")
     user_prompt = build_prompt(state, episode_number, scene_plan)
     for response_attempt in range(1, MAX_RESPONSE_ATTEMPTS + 1):
+        log(f"본문 생성 ({response_attempt}/{MAX_RESPONSE_ATTEMPTS})")
         raw = generate_raw_response(client, model, system_prompt, user_prompt)
         try:
-            title, body, update = parse_generated_episode(raw)
-            validate_update_against_plan(update, scene_plan)
+            title, body, update = parse_generated_episode(raw, scene_plan)
+            relevance = body_plan_relevance_report(
+                title, body, scene_plan, state
+            )
+            if not relevance["relevant"]:
+                raise ValueError(
+                    "본문이 계획과 실질적으로 무관합니다: "
+                    + "; ".join(relevance["issues"])
+                )
+            log("본문 검증 결과: 계획과 실질적으로 관련됨")
             return title, body, update
-        except ValueError:
+        except ValueError as exc:
             if response_attempt == MAX_RESPONSE_ATTEMPTS:
                 raise
-            print(
-                "응답 형식 또는 계획 일치 검증 실패, 본문 생성을 한 번 더 시도합니다.",
-                file=sys.stderr,
+            log(
+                f"본문 형식 또는 실질 관련성 검증 실패: {exc}; "
+                "본문 생성을 한 번 더 시도합니다."
             )
     raise AssertionError("unreachable")
 
@@ -1189,6 +1474,24 @@ def output_paths(preview_dir: Path | None) -> tuple[Path, Path, Path]:
     )
 
 
+def save_episode_and_state(
+    episode_path: Path,
+    episode_text: str,
+    state_path: Path,
+    state_text: str,
+) -> None:
+    """Commit episode/state together, rolling back a newly created episode."""
+    created_episode = False
+    try:
+        atomic_create_text(episode_path, episode_text)
+        created_episode = True
+        atomic_write_text(state_path, state_text)
+    except Exception:
+        if created_episode:
+            episode_path.unlink(missing_ok=True)
+        raise
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="다음 연재 에피소드 한 편 생성")
     parser.add_argument(
@@ -1201,7 +1504,23 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         type=Path,
         help="생성된 정확한 에피소드 경로와 번호를 기록할 JSON 파일",
     )
+    parser.add_argument(
+        "--debug-model-catalog",
+        action="store_true",
+        help="models.list 전체 이름을 진행 로그에도 출력",
+    )
     return parser.parse_args(argv)
+
+
+def create_gemini_client(api_key: str) -> genai.Client:
+    if (
+        os.environ.get("CI", "").lower() == "true"
+        and os.environ.get("SERIAL_NOVEL_ALLOW_GEMINI_NETWORK") != "1"
+    ):
+        raise RuntimeError(
+            "CI Gemini network access is disabled outside the generation step."
+        )
+    return genai.Client(api_key=api_key)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1219,18 +1538,18 @@ def main(argv: list[str] | None = None) -> int:
     if output_path.exists():
         raise FileExistsError(f"에피소드 파일이 이미 존재합니다: {output_path}")
 
-    client = genai.Client(api_key=api_key)
+    client = create_gemini_client(api_key)
+    log("models.list() 조회 시작")
     catalog = call_with_retry(
         lambda: list_models(client),
         "모델 목록 조회",
     )
     generated_at = utc_now()
-    listed_names = [item["name"] for item in catalog]
-    generate_names = [item["name"] for item in generation_models(catalog)]
-    print(f"models.list() 전체 모델 {len(listed_names)}개: {', '.join(listed_names)}")
-    print(
-        f"generateContent 지원 모델 {len(generate_names)}개: "
-        f"{', '.join(generate_names)}"
+    candidates, _ = ordered_model_candidates(
+        catalog, os.environ.get("GEMINI_MODEL")
+    )
+    log_model_catalog_summary(
+        catalog, candidates, debug=args.debug_model_catalog
     )
     try:
         model, probe_succeeded, probe_failed = probe_and_select_model(
@@ -1262,11 +1581,12 @@ def main(argv: list[str] | None = None) -> int:
         target_catalog,
         json.dumps(catalog_document, ensure_ascii=False, indent=2) + "\n",
     )
-    print(f"선택 모델: {model}")
+    log(f"선택 모델: {model}")
 
     recent_records = recent_episode_records(
         fingerprints=state.get("recent_scene_fingerprints", []),
     )
+    log("계획 생성 시작")
     scene_plan = generate_scene_plan(
         client,
         model,
@@ -1277,7 +1597,7 @@ def main(argv: list[str] | None = None) -> int:
     quality_retry_used = False
     if plan_needs_revision(plan_report):
         quality_retry_used = True
-        print(
+        log(
             "장면 계획에서 연속성·냉각 기간·반복 위험을 감지해 한 번 재계획합니다."
         )
         scene_plan = generate_scene_plan(
@@ -1292,6 +1612,9 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError(
                 "재계획 후에도 연속성·냉각 기간·반복 위험 조건을 충족하지 못했습니다."
             )
+        log("재계획 완료")
+    else:
+        log("재계획 불필요")
 
     title, body, update = generate_episode_from_plan(
         client,
@@ -1307,7 +1630,7 @@ def main(argv: list[str] | None = None) -> int:
         recent_records,
         fingerprint=fingerprint,
     )
-    print(
+    log(
         f"최근 원고 최대 유사도: {similarity['max_score']:.4f} "
         f"(비교 화: {similarity['similar_episode']})"
     )
@@ -1317,7 +1640,7 @@ def main(argv: list[str] | None = None) -> int:
                 "허용된 품질 재시도를 이미 사용했고 생성 원고의 반복 위험이 높습니다."
             )
         quality_retry_used = True
-        print("생성 원고의 반복 위험이 높아 한 번 재계획하고 재생성합니다.")
+        log("생성 원고의 반복 위험이 높아 한 번 재계획하고 재생성합니다.")
         scene_plan = generate_scene_plan(
             client,
             model,
@@ -1342,7 +1665,7 @@ def main(argv: list[str] | None = None) -> int:
             recent_records,
             fingerprint=fingerprint,
         )
-        print(f"재생성 후 최근 원고 최대 유사도: {similarity['max_score']:.4f}")
+        log(f"재생성 후 최근 원고 최대 유사도: {similarity['max_score']:.4f}")
         if similarity["too_similar"]:
             raise ValueError("재생성 후에도 최근 원고와 지나치게 유사합니다.")
 
@@ -1356,29 +1679,21 @@ def main(argv: list[str] | None = None) -> int:
         generated_at=generated_at,
     )
 
-    created_episode = False
-    try:
-        atomic_create_text(
-            output_path,
-            episode_markdown(
-                episode_number,
-                title,
-                body,
-                model,
-                generated_at=generated_at,
-            ),
-        )
-        created_episode = True
-        # State is the commit point: it advances only after the public file and
-        # diagnostic catalog have been written successfully.
-        atomic_write_text(
-            target_state,
-            json.dumps(new_state, ensure_ascii=False, indent=2) + "\n",
-        )
-    except Exception:
-        if created_episode:
-            output_path.unlink(missing_ok=True)
-        raise
+    log("파일 저장 시작")
+    # State is the commit point: it advances only after the public file and
+    # diagnostic catalog have been written successfully.
+    save_episode_and_state(
+        output_path,
+        episode_markdown(
+            episode_number,
+            title,
+            body,
+            model,
+            generated_at=generated_at,
+        ),
+        target_state,
+        json.dumps(new_state, ensure_ascii=False, indent=2) + "\n",
+    )
 
     mode = "preview" if args.preview_dir is not None else "publish"
     if args.result_json is not None:
@@ -1399,8 +1714,8 @@ def main(argv: list[str] | None = None) -> int:
             )
             + "\n",
         )
-    print(f"생성 완료 ({mode}): {output_path}")
-    print(f"제목: {title}")
+    log(f"파일 저장 완료 ({mode}): {output_path}")
+    log(f"제목: {title}")
     return 0
 
 
@@ -1409,5 +1724,5 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except Exception as exc:
         message = safe_error_reason(exc, limit=2000)
-        print(f"{exc.__class__.__name__}: {message}", file=sys.stderr)
+        log(f"{exc.__class__.__name__}: {message}")
         raise SystemExit(1)

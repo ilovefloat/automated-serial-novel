@@ -39,7 +39,13 @@ jobs:
       - name: Install dependencies
         run: python -m pip install -r requirements-dev.txt
 
+      - name: Install Playwright Chromium
+        run: python -m playwright install --with-deps chromium
+
       - name: Validate repository
+        env:
+          GEMINI_API_KEY: ""
+          SERIAL_NOVEL_ALLOW_GEMINI_NETWORK: "0"
         run: |
           python -m py_compile scripts/generate_episode.py scripts/narrative_control.py scripts/rebuild_index.py scripts/validate_repository.py
           python -m unittest discover -s tests -v
@@ -62,6 +68,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          SERIAL_NOVEL_ALLOW_GEMINI_NETWORK: "1"
           PREVIEW: ${{ steps.mode.outputs.preview }}
         shell: bash
         run: |

@@ -1,27 +1,36 @@
 from __future__ import annotations
 
+import io
 import json
+import os
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from scripts.generate_episode import (
     ModelProbeError,
     PREFERRED_MODELS,
     atomic_create_text,
+    body_plan_relevance_report,
     calculate_next_episode,
     call_with_retry,
+    create_gemini_client,
     extract_title_and_body,
     generate_episode_from_plan,
     generate_scene_plan,
     list_generation_models,
+    log_model_catalog_summary,
     merge_state,
     model_catalog_document,
     ordered_model_candidates,
     parse_response,
     probe_and_select_model,
+    safe_error_reason,
+    save_episode_and_state,
 )
 
 
@@ -263,6 +272,14 @@ class ProbeModels:
 
 
 class ProbeSelectionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._captured_probe_output = io.StringIO()
+        self._probe_redirect = redirect_stdout(self._captured_probe_output)
+        self._probe_redirect.__enter__()
+
+    def tearDown(self) -> None:
+        self._probe_redirect.__exit__(None, None, None)
+
     def client(self, outcomes: dict[str, list[object]]) -> SimpleNamespace:
         return SimpleNamespace(models=ProbeModels(outcomes))
 
@@ -437,6 +454,18 @@ class ProbeSelectionTests(unittest.TestCase):
 
 
 class PipelineStageTests(unittest.TestCase):
+    @staticmethod
+    def response(
+        update: dict[str, object],
+        body_text: str = "세척실에서 배수구 청소를 시작했다. ",
+        title: str = "세척실",
+    ) -> str:
+        public = f"# {title}\n\n" + (body_text * 80)
+        return json.dumps(
+            {"public_markdown": public, "state_update": update},
+            ensure_ascii=False,
+        )
+
     def test_plan_stage_returns_private_validated_plan(self) -> None:
         client = SimpleNamespace(
             models=ProbeModels(
@@ -474,6 +503,133 @@ class PipelineStageTests(unittest.TestCase):
         self.assertEqual(title, "세척실")
         self.assertNotIn("state_update", body)
         self.assertEqual(update["actual_time_range"], "교대 시작 뒤 20분")
+
+    def test_primary_arc_metadata_mismatch_is_normalized_without_retry(self) -> None:
+        update = valid_update()
+        update["primary_arc_progress"]["arc"] = "생계와 부채"
+        client = SimpleNamespace(
+            models=ProbeModels(
+                {"gemini-test": [self.response(update)]}
+            )
+        )
+        _, _, normalized = generate_episode_from_plan(
+            client, "gemini-test", {}, 1, valid_plan()
+        )
+        self.assertEqual(
+            normalized["primary_arc_progress"]["arc"],
+            valid_plan()["active_arc"],
+        )
+        self.assertEqual(len(client.models.calls), 1)
+
+    def test_missing_primary_arc_is_filled_from_plan(self) -> None:
+        update = valid_update()
+        del update["primary_arc_progress"]
+        client = SimpleNamespace(
+            models=ProbeModels(
+                {"gemini-test": [self.response(update)]}
+            )
+        )
+        _, _, normalized = generate_episode_from_plan(
+            client, "gemini-test", {}, 1, valid_plan()
+        )
+        self.assertEqual(
+            normalized["primary_arc_progress"]["arc"],
+            valid_plan()["active_arc"],
+        )
+
+    def test_plan_primary_found_in_body_supporting_arcs_succeeds(self) -> None:
+        update = valid_update()
+        planned_progress = dict(update["primary_arc_progress"])
+        update["primary_arc_progress"] = {
+            **planned_progress,
+            "arc": "생계와 부채",
+        }
+        update["supporting_arc_progress"] = [planned_progress]
+        client = SimpleNamespace(
+            models=ProbeModels(
+                {"gemini-test": [self.response(update)]}
+            )
+        )
+        _, _, normalized = generate_episode_from_plan(
+            client, "gemini-test", {}, 1, valid_plan()
+        )
+        self.assertEqual(
+            normalized["primary_arc_progress"]["arc"],
+            "청소 노동과 신체 손상",
+        )
+        self.assertEqual(len(client.models.calls), 1)
+
+    def test_location_label_difference_is_warning_only(self) -> None:
+        update = valid_update()
+        update["locations"] = ["지하 위생 작업 구역"]
+        client = SimpleNamespace(
+            models=ProbeModels(
+                {"gemini-test": [self.response(update)]}
+            )
+        )
+        _, _, normalized = generate_episode_from_plan(
+            client, "gemini-test", {}, 1, valid_plan()
+        )
+        self.assertEqual(normalized["locations"], ["지하 세척실"])
+        self.assertEqual(len(client.models.calls), 1)
+
+    def test_missing_unfinished_action_alone_triggers_body_retry(self) -> None:
+        state = {
+            "current_scene": "문 앞",
+            "unresolved_immediate_actions": ["문을 연다"],
+        }
+        client = SimpleNamespace(
+            models=ProbeModels(
+                {
+                    "gemini-test": [
+                        self.response(
+                            valid_update(),
+                            "세척실에서 배수구 청소를 시작했다. ",
+                        ),
+                        self.response(
+                            valid_update(),
+                            "문을 연다. 세척실에서 배수구 청소를 시작했다. ",
+                        ),
+                    ]
+                }
+            )
+        )
+        generate_episode_from_plan(
+            client, "gemini-test", state, 1, valid_plan()
+        )
+        self.assertEqual(len(client.models.calls), 2)
+
+    def test_completely_different_event_triggers_body_retry(self) -> None:
+        client = SimpleNamespace(
+            models=ProbeModels(
+                {
+                    "gemini-test": [
+                        self.response(
+                            valid_update(),
+                            "옥상에서 계약 승인 서류와 회의만 검토했다. ",
+                            "옥상 회의",
+                        ),
+                        self.response(
+                            valid_update(),
+                            "세척실에서 배수구 청소를 시작했다. ",
+                        ),
+                    ]
+                }
+            )
+        )
+        generate_episode_from_plan(
+            client, "gemini-test", {}, 1, valid_plan()
+        )
+        self.assertEqual(len(client.models.calls), 2)
+
+    def test_relevance_uses_body_not_metadata_labels(self) -> None:
+        report = body_plan_relevance_report(
+            "세척실",
+            "세척실에서 배수구 청소를 시작했다.",
+            valid_plan(),
+            {},
+        )
+        self.assertTrue(report["relevant"])
 
 
 class ResponseTests(unittest.TestCase):
@@ -581,6 +737,39 @@ class StateAndFileTests(unittest.TestCase):
         )
         self.assertEqual(first, second)
 
+    def test_merge_uses_all_plan_owned_structural_fields(self) -> None:
+        update = valid_update()
+        update["locations"] = ["다른 장소"]
+        update["character_combination"] = ["다른 인물"]
+        update["conflict_types"] = ["다른 갈등"]
+        update["social_themes"] = ["다른 주제"]
+        update["narrative_mode"] = "다른 서술"
+        update["ending_pattern"] = "다른 결말"
+        update["direct_continuation"] = True
+        update["motif_cooldown_updates"] = ["major_accident"]
+        merged = merge_state(
+            {"next_episode": 1, "history": [], "new_facts": []},
+            update,
+            1,
+            "제목",
+            valid_plan(),
+        )
+        fingerprint = merged["recent_scene_fingerprints"][-1]
+        self.assertEqual(merged["active_arc"], valid_plan()["active_arc"])
+        self.assertEqual(merged["supporting_arcs"], valid_plan()["supporting_arcs"])
+        self.assertEqual(fingerprint["locations"], [valid_plan()["location"]])
+        self.assertEqual(
+            fingerprint["character_combination"],
+            valid_plan()["main_characters"],
+        )
+        self.assertEqual(
+            fingerprint["conflict_type"], [valid_plan()["conflict_type"]]
+        )
+        self.assertEqual(
+            fingerprint["social_theme"], [valid_plan()["social_theme"]]
+        )
+        self.assertEqual(merged["narrative_mode"], valid_plan()["narrative_mode"])
+
     def test_atomic_create_never_overwrites(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "001.md"
@@ -588,6 +777,31 @@ class StateAndFileTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 atomic_create_text(path, "second")
             self.assertEqual(path.read_text(encoding="utf-8"), "first")
+
+    def test_state_write_failure_rolls_back_new_episode(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            episode_path = root / "episodes" / "001.md"
+            state_path = root / "story_state.json"
+            state_path.write_text('{"next_episode": 1}\n', encoding="utf-8")
+            with (
+                patch(
+                    "scripts.generate_episode.atomic_write_text",
+                    side_effect=OSError("simulated state failure"),
+                ),
+                self.assertRaisesRegex(OSError, "simulated"),
+            ):
+                save_episode_and_state(
+                    episode_path,
+                    "complete episode",
+                    state_path,
+                    '{"next_episode": 2}\n',
+                )
+            self.assertFalse(episode_path.exists())
+            self.assertEqual(
+                state_path.read_text(encoding="utf-8"),
+                '{"next_episode": 1}\n',
+            )
 
     def test_retry_only_transient_failures(self) -> None:
         calls = 0
@@ -608,6 +822,46 @@ class StateAndFileTests(unittest.TestCase):
             "ok",
         )
         self.assertEqual(sleeps, [1, 2])
+
+
+class LoggingAndNetworkSafetyTests(unittest.TestCase):
+    def test_default_catalog_log_is_compact(self) -> None:
+        large_catalog = catalog(*(f"gemini-model-{number}" for number in range(56)))
+        output = io.StringIO()
+        with redirect_stdout(output):
+            log_model_catalog_summary(
+                large_catalog,
+                ["gemini-model-1", "gemini-model-2"],
+            )
+        logged = output.getvalue()
+        self.assertIn("전체 56개", logged)
+        self.assertIn("후보 모델: gemini-model-1, gemini-model-2", logged)
+        self.assertNotIn("gemini-model-55", logged)
+
+    def test_probe_reason_does_not_log_full_response_dict(self) -> None:
+        error = ProbeError(
+            503,
+            "{'error': {'code': 503, 'message': 'service unavailable', "
+            "'details': ['very long response body']}}",
+        )
+        reason = safe_error_reason(error)
+        self.assertIn("service unavailable", reason)
+        self.assertNotIn("details", reason)
+
+    def test_ci_client_creation_is_blocked_without_explicit_generation_opt_in(
+        self,
+    ) -> None:
+        with (
+            patch.dict(
+                os.environ,
+                {"CI": "true", "SERIAL_NOVEL_ALLOW_GEMINI_NETWORK": "0"},
+                clear=False,
+            ),
+            patch("scripts.generate_episode.genai.Client") as client,
+        ):
+            with self.assertRaisesRegex(RuntimeError, "disabled"):
+                create_gemini_client("fake-key")
+            client.assert_not_called()
 
 
 if __name__ == "__main__":

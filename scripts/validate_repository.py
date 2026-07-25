@@ -63,6 +63,38 @@ def validate_workflow(path: Path) -> list[str]:
         errors.append("GEMINI_API_KEY must use the repository secret")
     if "git push origin HEAD:main" not in text:
         errors.append("workflow must explicitly push origin/main")
+    required_steps = (
+        "- name: Checkout repository",
+        "- name: Set up Python",
+        "- name: Install dependencies",
+        "- name: Install Playwright Chromium",
+        "- name: Validate repository",
+        "- name: Select run mode",
+        "- name: Generate next episode",
+        "- name: Export exact generated episode path",
+        "- name: Rebuild episode index",
+        "- name: Upload preview artifact",
+        "- name: Commit generated episode",
+    )
+    positions = [text.find(step) for step in required_steps]
+    if any(position < 0 for position in positions):
+        errors.append("generate workflow is missing a required ordered step")
+    elif positions != sorted(positions):
+        errors.append("generate workflow steps are out of order")
+    validate_block = text[
+        text.find("- name: Validate repository"):
+        text.find("- name: Select run mode")
+    ]
+    if 'GEMINI_API_KEY: ""' not in validate_block:
+        errors.append("validate step must explicitly clear GEMINI_API_KEY")
+    if 'SERIAL_NOVEL_ALLOW_GEMINI_NETWORK: "0"' not in validate_block:
+        errors.append("validate step must block Gemini network access")
+    generate_block = text[
+        text.find("- name: Generate next episode"):
+        text.find("- name: Export exact generated episode path")
+    ]
+    if 'SERIAL_NOVEL_ALLOW_GEMINI_NETWORK: "1"' not in generate_block:
+        errors.append("only the generation step may opt in to Gemini network access")
     return [f"{path}: {error}" for error in errors]
 
 
