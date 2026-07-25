@@ -30,6 +30,7 @@ AI를 악당이나 자아를 얻은 존재로 만들지 않는다. 자동화의 
 - `docs/episodes/`: 공개 Markdown 원고
 - `docs/index.html`, `docs/episode.html`: GitHub Pages 연재 화면
 - `.github/workflows/generate.yml`: 수동·일일 생성과 커밋
+- `.github/workflows/deploy-pages.yml`: `/docs` 변경 전용 GitHub Pages 배포
 - `.github/workflows/publish-novelpia.yml`: storage state 기반 preview·노벨피아 게시
 - `scripts/novelpia_content.py`: 에피소드 경로·front matter·Markdown 안전 변환
 - `scripts/upload_novelpia.py`: Summernote 입력 검증·단일 제출·성공 판정
@@ -113,9 +114,11 @@ Repository의 **Settings → Secrets and variables → Actions → Secrets**에
 
 Repository의 **Settings → Pages**에서 다음과 같이 설정한다.
 
-- Source: `Deploy from a branch`
-- Branch: `main`
-- Folder: `/docs`
+- Source: `GitHub Actions`
+
+`Deploy GitHub Pages` workflow는 `main`의 `/docs`가 변경될 때만 실행한다.
+`pages` concurrency group에서 새 배포가 기존 배포를 취소하므로 상태 파일만
+갱신하는 커밋이나 겹친 배포가 Pages deployment를 충돌시키지 않는다.
 
 Actions의 자동 커밋을 허용하려면 **Settings → Actions → General →
 Workflow permissions**에서 `Read and write permissions`를 선택한다. 조직
