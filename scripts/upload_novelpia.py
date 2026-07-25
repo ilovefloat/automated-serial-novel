@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import os
 import re
@@ -524,15 +525,6 @@ def run_browser_operation(
     if not publish_now:
         capture_safe_preview(page, verification, screenshot_path)
         save_storage_state(context, refreshed_auth_path)
-        state.update(
-            {
-                "episode_path": content.repository_path,
-                "title": content.title,
-                "publish_status": "previewed",
-                "last_error_code": "",
-                "session_refresh_status": "pending",
-            }
-        )
         return PublishResult("previewed")
 
     # Final mandatory checks are intentionally adjacent to the single click.
@@ -602,6 +594,8 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     state = load_state(args.state)
+    original_state = copy.deepcopy(state)
+    preserve_publish_state = args.preview_only and not args.refresh_session_only
     content: EpisodeContent | None = None
     try:
         if not args.auth_state.is_file() or args.auth_state.stat().st_size == 0:
@@ -637,10 +631,16 @@ def main() -> int:
                 refresh_session_only=args.refresh_session_only,
             )
             browser.close()
-        save_state(args.state, state)
+        save_state(
+            args.state,
+            original_state if preserve_publish_state else state,
+        )
         print(f"노벨피아 작업 완료: {result.status}")
         return 0
     except NovelpiaError as exc:
+        if preserve_publish_state:
+            print(f"{exc.code}: {exc}", file=sys.stderr)
+            return 1
         state["last_error_code"] = exc.code
         state["publish_status"] = (
             "unknown"
@@ -657,6 +657,9 @@ def main() -> int:
         print(f"{exc.code}: {exc}", file=sys.stderr)
         return 1
     except Exception as exc:
+        if preserve_publish_state:
+            print(f"NOVELPIA_VALIDATION_FAILED: {exc}", file=sys.stderr)
+            return 1
         state["last_error_code"] = "NOVELPIA_VALIDATION_FAILED"
         state["publish_status"] = "failed"
         save_state(args.state, state)

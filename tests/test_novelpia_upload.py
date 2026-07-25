@@ -24,6 +24,7 @@ from scripts.upload_novelpia import (
     classify_unavailable_page,
     ensure_not_duplicate,
     populate_and_verify_editor,
+    run_browser_operation,
     should_publish,
     submit_once_and_determine,
 )
@@ -200,6 +201,49 @@ class StateTests(unittest.TestCase):
         with self.assertRaises(NovelpiaError):
             ensure_not_duplicate(content(), unknown, False)
         ensure_not_duplicate(content(), unknown, True)
+
+    def test_preview_never_submits_or_changes_published_state(self) -> None:
+        published = {
+            "last_success_episode": 2,
+            "episode_path": "docs/episodes/002.md",
+            "title": "삼백 원짜리 도장",
+            "publish_status": "published",
+            "published_episodes": [1, 2],
+            "unknown_result_episodes": [],
+        }
+        original = json.loads(json.dumps(published))
+        page = SimpleNamespace(
+            goto=lambda *args, **kwargs: SimpleNamespace(status=200)
+        )
+        with (
+            patch("scripts.upload_novelpia.wait_for_editor"),
+            patch(
+                "scripts.upload_novelpia.populate_and_verify_editor",
+                return_value=SimpleNamespace(),
+            ),
+            patch("scripts.upload_novelpia.capture_safe_preview") as capture,
+            patch("scripts.upload_novelpia.save_storage_state"),
+            patch(
+                "scripts.upload_novelpia.submit_once_and_determine"
+            ) as submit,
+        ):
+            result = run_browser_operation(
+                context=SimpleNamespace(),
+                page=page,
+                editor_url="https://novelpia.com/mynovel/all/write/442975",
+                content=content(),
+                publish_enabled=True,
+                preview_only=True,
+                screenshot_path=Path("preview.png"),
+                refreshed_auth_path=Path("auth.json"),
+                state=published,
+                force_republish=True,
+                refresh_session_only=False,
+            )
+        self.assertEqual(result.status, "previewed")
+        self.assertEqual(published, original)
+        capture.assert_called_once()
+        submit.assert_not_called()
 
 
 class StorageStateTests(unittest.TestCase):
