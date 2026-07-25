@@ -1,12 +1,12 @@
 {
   "last_success_episode": null,
   "last_success_at": null,
-  "episode_path": "",
-  "title": "",
+  "episode_path": "docs/episodes/001.md",
+  "title": "회색 빛의 간격",
   "published_url": "",
-  "publish_status": "failed",
-  "last_error_code": "NOVELPIA_VALIDATION_FAILED",
-  "session_refresh_status": "never",
+  "publish_status": "previewed",
+  "last_error_code": "",
+  "session_refresh_status": "updated",
   "published_episodes": [],
   "unknown_result_episodes": []
 }
