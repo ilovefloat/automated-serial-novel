@@ -1,16 +1,17 @@
 {
-  "last_success_episode": 3,
-  "last_success_at": "2026-07-25T16:24:42+00:00",
-  "episode_path": "docs/episodes/003.md",
-  "title": "주황색 경고등",
-  "published_url": "https://novelpia.com/viewer/5897681",
+  "last_success_episode": 4,
+  "last_success_at": "2026-07-26T14:30:36+00:00",
+  "episode_path": "docs/episodes/004.md",
+  "title": "회색의 집행인",
+  "published_url": "https://novelpia.com/viewer/5900718",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
   "published_episodes": [
     1,
     2,
-    3
+    3,
+    4
   ],
   "unknown_result_episodes": []
 }
