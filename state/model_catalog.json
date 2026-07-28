@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-07-26T14:28:07.272808+00:00",
+  "checked_at": "2026-07-28T11:47:28.868400+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -713,6 +713,7 @@
     "gemini-3.5-flash"
   ],
   "probe_failed_models": [],
+  "generation_failed_models": [],
   "selected_model": "gemini-3.5-flash",
   "selection_priority": [
     "gemini-3.5-flash",
