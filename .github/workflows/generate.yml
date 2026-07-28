@@ -9,8 +9,12 @@ on:
         default: false
         type: boolean
   schedule:
-    # UTC 13:00 = KST 22:00
-    - cron: "0 13 * * *"
+    # Four independent chances per KST day, away from the top of the hour.
+    # KST 03:17, 07:47, 12:17, 18:47
+    - cron: "17 18 * * *"
+    - cron: "47 22 * * *"
+    - cron: "17 3 * * *"
+    - cron: "47 9 * * *"
 
 permissions:
   contents: write
@@ -22,7 +26,7 @@ concurrency:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     outputs:
       episode_path: ${{ steps.episode_result.outputs.episode_path }}
 
@@ -47,7 +51,7 @@ jobs:
           GEMINI_API_KEY: ""
           SERIAL_NOVEL_ALLOW_GEMINI_NETWORK: "0"
         run: |
-          python -m py_compile scripts/generate_episode.py scripts/narrative_control.py scripts/rebuild_index.py scripts/validate_repository.py
+          python -m py_compile scripts/generate_episode.py scripts/audit_models.py scripts/narrative_control.py scripts/rebuild_index.py scripts/validate_repository.py
           python -m unittest discover -s tests -v
           python scripts/validate_repository.py
 
@@ -70,15 +74,22 @@ jobs:
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
           SERIAL_NOVEL_ALLOW_GEMINI_NETWORK: "1"
           PREVIEW: ${{ steps.mode.outputs.preview }}
+          SCHEDULED_RUN: ${{ github.event_name == 'schedule' }}
         shell: bash
         run: |
+          daily_args=()
+          if [[ "${SCHEDULED_RUN}" == "true" ]]; then
+            daily_args+=(--skip-if-generated-today)
+          fi
           if [[ "${PREVIEW}" == "true" ]]; then
             python scripts/generate_episode.py \
               --preview-dir preview \
-              --result-json "${RUNNER_TEMP}/generation-result.json"
+              --result-json "${RUNNER_TEMP}/generation-result.json" \
+              "${daily_args[@]}"
           else
             python scripts/generate_episode.py \
-              --result-json "${RUNNER_TEMP}/generation-result.json"
+              --result-json "${RUNNER_TEMP}/generation-result.json" \
+              "${daily_args[@]}"
           fi
 
       - name: Export exact generated episode path
@@ -95,8 +106,8 @@ jobs:
                   encoding="utf-8"
               )
           )
-          path = result["episode_path"]
-          if result["mode"] == "publish":
+          path = result.get("episode_path", "")
+          if result["mode"] == "publish" and path:
               if not path.startswith("docs/episodes/") or not path.endswith(".md"):
                   raise SystemExit("unsafe generated episode path")
               with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:

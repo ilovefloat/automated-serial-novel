@@ -30,6 +30,7 @@ AI를 악당이나 자아를 얻은 존재로 만들지 않는다. 자동화의 
 - `docs/episodes/`: 공개 Markdown 원고
 - `docs/index.html`, `docs/episode.html`: GitHub Pages 연재 화면
 - `.github/workflows/generate.yml`: 수동·일일 생성과 커밋
+- `.github/workflows/model-audit.yml`: 반기별 Gemini 모델·SDK 호환성 감사
 - `.github/workflows/deploy-pages.yml`: `/docs` 변경 전용 GitHub Pages 배포
 - `.github/workflows/publish-novelpia.yml`: storage state 기반 preview·노벨피아 게시
 - `scripts/novelpia_content.py`: 에피소드 경로·front matter·Markdown 안전 변환
@@ -51,6 +52,12 @@ AI를 악당이나 자아를 얻은 존재로 만들지 않는다. 자동화의 
 `unresolved_immediate_actions`, `next_required_connection`으로 추적한다.
 다음 계획은 이 행동들을 직접 이어야 하므로 게시 분량 때문에 장면을 억지로
 끝내거나 새 사건을 추가하지 않는다.
+
+예약 생성은 특정 한 시점의 Gemini 혼잡에 의존하지 않도록 KST 03:17, 07:47,
+12:17, 18:47에 실행 기회를 둔다. 첫 성공이 `last_generated_at`을 갱신하면
+같은 KST 날짜의 나머지 실행은 성공 상태로 건너뛰므로 하루에 여러 화를 만들지
+않는다. 예약 실행이 모두 외부 장애로 실패한 날에는 원고를 허위로 완성 처리하지
+않으며, 수동 실행은 이 일일 제한을 적용하지 않는다.
 
 기본 분량은 한국어 1,500~4,500자지만 짧고 강한 장면은 약 1,000자, 중요한
 대화나 사건은 5,000자 이상도 허용한다. 회차 길이보다 장면의 자연스러운
@@ -109,6 +116,14 @@ Repository의 **Settings → Secrets and variables → Actions → Secrets**에
 
 모델을 고정하려면 같은 화면의 **Variables**에 선택 사항인
 `GEMINI_MODEL`을 등록한다. `models/` 접두사는 있어도 된다.
+
+일상 생성도 매번 `models.list()`를 호출하므로 새 모델의 등장과 기존 모델의
+제거는 매일 반영된다. 이와 별도로 매년 1월 5일과 7월 5일에는 반기 모델 감사가
+최신 `google-genai` SDK로 전체 테스트를 실행하고, 자동 텍스트 후보를 모두
+저비용 probe한다. 결과의 전체 catalog, 후보 순서, 성공·실패와 SDK 버전은
+90일 보관 artifact `gemini-model-audit-*`에 기록한다. 감사 workflow 실패는
+선호 모델 목록, 제외 규칙, SDK 상한 또는 API 응답 형식을 사람이 검토해야 한다는
+신호다.
 
 ### 2. GitHub Pages
 
@@ -208,7 +223,9 @@ fallback을 계속한다.
 로그에는 각 probe의 성공·실패 모델, 상태 코드와 비밀값을 제거한 사유를 남긴다.
 `state/model_catalog.json` 또는 preview catalog에는 `listed_models`,
 `generate_content_models`, `probe_succeeded_models`, `probe_failed_models`,
-`selected_model`을 분리해 기록한다.
+`generation_failed_models`, `selected_model`을 분리해 기록한다. 본문 생성 중
+모델을 전환했다면 `selected_model`과 에피소드 front matter에는 실제로 본문을
+완성한 모델이 기록된다.
 
 ## 오류 처리
 
@@ -218,6 +235,12 @@ fallback을 계속한다.
   같은 후보에서 최대 3회만 지수 간격으로 재시도한다. 계속 실패하면 그 모델을
   영구 제외하지 않고 이번 실행의 실패로만 기록한 뒤 다음 후보를 probe한다.
   모든 후보가 실패하면 일시 오류 후보와 상태 코드가 포함된 오류로 종료한다.
+- 본문 생성은 같은 모델에서 최대 6회(최초 호출 포함, 1·2·4·8·16초 백오프)
+  시도한다. 그래도 일시 오류가 계속되면 다음 텍스트 모델을 probe하고 같은
+  장면 계획으로 본문 생성을 이어 간다. 한 실행에서는 최대 4개 모델을 사용한다.
+- 일시 오류로 probe나 본문 생성에 실패한 모델은 영구 제외하지 않는다. 같은
+  실행의 후속 품질 사이클과 다음 예약 실행에서 다시 정상 후보가 된다. 403,
+  404, 명시적인 모델 비호환처럼 영구적인 오류만 해당 실행의 후보에서 제외한다.
 - 잘못된 API 키와 probe로 분류할 수 없는 영구 오류는 즉시 종료한다.
 - 빈 응답, JSON 오류, 짧은 본문, 코드펜스 오염, 잘못된 제목, 상태 필드·타입
   오류는 한 번만 다시 생성하며, 다시 실패하면 파일을 공개하지 않는다.
@@ -234,8 +257,9 @@ fallback을 계속한다.
    `probe_failed_models`를 확인한다. 자동 fallback은 계속 진행된다.
 3. `state`와 `files` 번호 불일치는 누락·중복된 `docs/episodes/*.md`와
    `state/story_state.json`의 `next_episode`를 함께 확인한다.
-4. API rate limit이 반복되면 잠시 뒤 수동 실행한다. 워크플로는 무한 재시도하지
-   않는다.
+4. API rate limit이 반복되면 본문 모델 전환 로그와 catalog의
+   `generation_failed_models`를 확인한다. 최대 4개 후보가 모두 실패한 경우에는
+   잠시 뒤 수동 실행한다.
 5. push가 거부되면 branch protection과 Actions workflow permission을 확인한다.
 
 ## 검증
@@ -246,7 +270,7 @@ API 키가 필요 없는 검증:
 python -m pip install -r requirements-dev.txt
 python -m unittest discover -s tests -v
 python scripts/validate_repository.py
-python -m py_compile scripts/generate_episode.py scripts/narrative_control.py scripts/rebuild_index.py
+python -m py_compile scripts/generate_episode.py scripts/audit_models.py scripts/narrative_control.py scripts/rebuild_index.py
 ```
 
 실제 API 연결은 로컬에 키가 있을 때 preview로 짧게 확인한다. 테스트와 검증

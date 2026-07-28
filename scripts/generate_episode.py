@@ -9,7 +9,7 @@ import sys
 import tempfile
 import time
 from collections.abc import Callable, Iterable
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -56,11 +56,14 @@ EPISODES_DIR = ROOT / "docs" / "episodes"
 MODEL_CATALOG_PATH = STATE_DIR / "model_catalog.json"
 MIN_PUBLIC_CHARS = 700
 MAX_ATTEMPTS = 3
+BODY_GENERATION_ATTEMPTS = 6
+MAX_BODY_MODEL_CANDIDATES = 4
 MAX_RESPONSE_ATTEMPTS = 2
 MAX_PLAN_RESPONSE_ATTEMPTS = 2
 MAX_HISTORY_ITEMS = 20
 MAX_FACT_ITEMS = 60
 PROBE_MAX_OUTPUT_TOKENS = 1
+KST = timezone(timedelta(hours=9), name="KST")
 
 # 이름 목록의 반환 순서와 무관하게, 실제 사용 가능한 모델 중 이 순서로 선택한다.
 PREFERRED_MODELS = (
@@ -131,6 +134,25 @@ class ModelProbeError(RuntimeError):
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def generated_on_kst_date(
+    state: dict[str, Any],
+    now: datetime | None = None,
+) -> bool:
+    raw = state.get("last_generated_at")
+    if not isinstance(raw, str) or not raw.strip():
+        return False
+    try:
+        generated_at = datetime.fromisoformat(raw)
+    except ValueError:
+        return False
+    if generated_at.tzinfo is None:
+        generated_at = generated_at.replace(tzinfo=timezone.utc)
+    current = now or utc_now()
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=timezone.utc)
+    return generated_at.astimezone(KST).date() == current.astimezone(KST).date()
 
 
 def read_text(path: Path) -> str:
@@ -429,6 +451,7 @@ def probe_and_select_model(
                 "name": model,
                 "status_code": status or "UNKNOWN",
                 "reason": safe_error_reason(exc),
+                "transient": is_transient_error(exc),
             }
             failures.append(failure)
             log(
@@ -479,6 +502,7 @@ def model_catalog_document(
     probe_succeeded_models: list[str],
     probe_failed_models: list[dict[str, Any]],
     checked_at: datetime,
+    generation_failed_models: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     generate_catalog = generation_models(catalog)
     return {
@@ -490,6 +514,7 @@ def model_catalog_document(
         ],
         "probe_succeeded_models": probe_succeeded_models,
         "probe_failed_models": probe_failed_models,
+        "generation_failed_models": generation_failed_models or [],
         "selected_model": selected_model,
         "selection_priority": list(PREFERRED_MODELS),
         "fallback_policy": (
@@ -515,6 +540,24 @@ def log_model_catalog_summary(
     if debug:
         log(f"debug 전체 모델: {', '.join(listed_names)}")
         log(f"debug generateContent 모델: {', '.join(generate_names)}")
+
+
+def body_model_candidates(
+    candidates: Iterable[str],
+    selected_model: str,
+    probe_failures: Iterable[dict[str, Any]],
+) -> list[str]:
+    """Keep transient probe failures eligible for later generation fallback."""
+    permanently_failed = {
+        failure["name"]
+        for failure in probe_failures
+        if not failure.get("transient", False)
+    }
+    return [selected_model] + [
+        candidate
+        for candidate in candidates
+        if candidate != selected_model and candidate not in permanently_failed
+    ]
 
 
 def episode_numbers(paths: Iterable[Path]) -> list[int]:
@@ -1295,6 +1338,7 @@ def generate_raw_response(
             ),
         ),
         "본문 생성",
+        attempts=BODY_GENERATION_ATTEMPTS,
     )
     try:
         return response.text or ""
@@ -1497,6 +1541,101 @@ def generate_episode_from_plan(
     raise AssertionError("unreachable")
 
 
+def generate_episode_with_model_fallback(
+    client: genai.Client,
+    candidates: list[str],
+    state: dict[str, Any],
+    episode_number: int,
+    scene_plan: dict[str, Any],
+    already_probed: Iterable[str] = (),
+    sleep: Callable[[float], None] = time.sleep,
+) -> tuple[
+    str,
+    str,
+    dict[str, Any],
+    str,
+    list[str],
+    list[dict[str, Any]],
+]:
+    """Generate a body, moving to another model after exhausted transient errors."""
+    ordered = list(dict.fromkeys(candidates))[:MAX_BODY_MODEL_CANDIDATES]
+    if not ordered:
+        raise ValueError("본문 생성에 사용할 모델 후보가 없습니다.")
+
+    probed = list(dict.fromkeys(already_probed))
+    probed_set = set(probed)
+    failures: list[dict[str, Any]] = []
+    last_transient: Exception | None = None
+
+    for index, candidate in enumerate(ordered, start=1):
+        if candidate not in probed_set:
+            log(
+                f"대체 모델 probe 시작: {candidate} "
+                f"({index}/{len(ordered)})"
+            )
+            try:
+                probe_model(client, candidate, sleep=sleep)
+            except Exception as exc:
+                failure = {
+                    "name": candidate,
+                    "stage": "fallback_probe",
+                    "status_code": error_status_code(exc) or "UNKNOWN",
+                    "reason": safe_error_reason(exc),
+                    "transient": is_transient_error(exc),
+                }
+                failures.append(failure)
+                log(
+                    f"대체 모델 probe 실패: {candidate} "
+                    f"status={failure['status_code']} reason={failure['reason']}"
+                )
+                if (
+                    is_transient_error(exc)
+                    or is_model_unavailable_error(exc)
+                    or is_model_incompatible_error(exc)
+                ):
+                    continue
+                raise
+            probed.append(candidate)
+            probed_set.add(candidate)
+            log(f"대체 모델 probe 성공: {candidate}")
+
+        try:
+            title, body, update = generate_episode_from_plan(
+                client,
+                candidate,
+                state,
+                episode_number,
+                scene_plan,
+            )
+            return title, body, update, candidate, probed, failures
+        except Exception as exc:
+            if not is_transient_error(exc):
+                raise
+            last_transient = exc
+            failure = {
+                "name": candidate,
+                "stage": "body_generation",
+                "status_code": error_status_code(exc) or "UNKNOWN",
+                "reason": safe_error_reason(exc),
+                "transient": True,
+            }
+            failures.append(failure)
+            if index < len(ordered):
+                log(
+                    f"본문 생성 일시 오류가 {BODY_GENERATION_ATTEMPTS}회 시도 후에도 "
+                    f"계속되어 다음 모델로 전환합니다: "
+                    f"{candidate} -> {ordered[index]}"
+                )
+
+    if last_transient is not None:
+        raise last_transient
+    raise ModelProbeError(
+        "본문 생성용 대체 모델을 probe하지 못했습니다.",
+        failures,
+        probed,
+    )
+
+
 def output_paths(preview_dir: Path | None) -> tuple[Path, Path, Path]:
     if preview_dir is None:
         return EPISODES_DIR, STATE_DIR / "story_state.json", MODEL_CATALOG_PATH
@@ -1542,6 +1681,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="models.list 전체 이름을 진행 로그에도 출력",
     )
+    parser.add_argument(
+        "--skip-if-generated-today",
+        action="store_true",
+        help="KST 기준 오늘 이미 생성했다면 성공으로 종료",
+    )
     return parser.parse_args(argv)
 
 
@@ -1565,6 +1709,30 @@ def main(argv: list[str] | None = None) -> int:
 
     source_state_path = STATE_DIR / "story_state.json"
     state = migrate_story_state(load_json(source_state_path))
+    generated_at = utc_now()
+    if args.skip_if_generated_today and generated_on_kst_date(
+        state, generated_at
+    ):
+        log("KST 기준 오늘 에피소드가 이미 생성되어 이번 예약 실행을 건너뜁니다.")
+        if args.result_json is not None:
+            skipped_mode = (
+                "preview" if args.preview_dir is not None else "publish"
+            )
+            atomic_write_text(
+                args.result_json,
+                json.dumps(
+                    {
+                        "episode": None,
+                        "episode_path": "",
+                        "mode": skipped_mode,
+                        "skipped": True,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                )
+                + "\n",
+            )
+        return 0
     episode_number = calculate_next_episode(state, EPISODES_DIR.glob("*.md"))
     target_episodes, target_state, target_catalog = output_paths(args.preview_dir)
     output_path = target_episodes / f"{episode_number:03d}.md"
@@ -1577,7 +1745,6 @@ def main(argv: list[str] | None = None) -> int:
         lambda: list_models(client),
         "모델 목록 조회",
     )
-    generated_at = utc_now()
     candidates, _ = ordered_model_candidates(
         catalog, os.environ.get("GEMINI_MODEL")
     )
@@ -1649,12 +1816,28 @@ def main(argv: list[str] | None = None) -> int:
     else:
         log("재계획 불필요")
 
-    title, body, update = generate_episode_from_plan(
-        client,
+    body_candidates = body_model_candidates(candidates, model, probe_failed)
+    title, body, update, model, probe_succeeded, generation_failed = (
+        generate_episode_with_model_fallback(
+            client,
+            body_candidates,
+            state,
+            episode_number,
+            scene_plan,
+            already_probed=probe_succeeded,
+        )
+    )
+    catalog_document = model_catalog_document(
+        catalog,
         model,
-        state,
-        episode_number,
-        scene_plan,
+        probe_succeeded,
+        probe_failed,
+        generated_at,
+        generation_failed,
+    )
+    atomic_write_text(
+        target_catalog,
+        json.dumps(catalog_document, ensure_ascii=False, indent=2) + "\n",
     )
     fingerprint = fingerprint_from_update(update, episode_number)
     similarity = text_similarity_report(
@@ -1684,12 +1867,38 @@ def main(argv: list[str] | None = None) -> int:
         plan_report = plan_quality_report(scene_plan, state)
         if plan_needs_revision(plan_report):
             raise ValueError("유사도 재계획이 서사 제약을 충족하지 못했습니다.")
-        title, body, update = generate_episode_from_plan(
-            client,
+        retry_candidates = [model] + [
+            candidate
+            for candidate in body_candidates
+            if candidate != model
+        ]
+        (
+            title,
+            body,
+            update,
             model,
+            probe_succeeded,
+            retry_failures,
+        ) = generate_episode_with_model_fallback(
+            client,
+            retry_candidates,
             state,
             episode_number,
             scene_plan,
+            already_probed=probe_succeeded,
+        )
+        generation_failed.extend(retry_failures)
+        catalog_document = model_catalog_document(
+            catalog,
+            model,
+            probe_succeeded,
+            probe_failed,
+            generated_at,
+            generation_failed,
+        )
+        atomic_write_text(
+            target_catalog,
+            json.dumps(catalog_document, ensure_ascii=False, indent=2) + "\n",
         )
         fingerprint = fingerprint_from_update(update, episode_number)
         similarity = text_similarity_report(

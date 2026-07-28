@@ -15,12 +15,15 @@ from scripts.generate_episode import (
     ModelProbeError,
     PREFERRED_MODELS,
     atomic_create_text,
+    body_model_candidates,
     body_plan_relevance_report,
     calculate_next_episode,
     call_with_retry,
     create_gemini_client,
     extract_title_and_body,
     generate_episode_from_plan,
+    generate_episode_with_model_fallback,
+    generated_on_kst_date,
     generate_scene_plan,
     list_generation_models,
     log_model_catalog_summary,
@@ -249,7 +252,21 @@ class ModelSelectionTests(unittest.TestCase):
             ["gemini-3.5-flash"],
         )
         self.assertEqual(document["probe_failed_models"][0]["status_code"], 404)
+        self.assertEqual(document["generation_failed_models"], [])
         self.assertEqual(document["selected_model"], "gemini-3.5-flash")
+
+    def test_transient_probe_failure_remains_body_fallback_candidate(self) -> None:
+        self.assertEqual(
+            body_model_candidates(
+                ["primary", "busy-model", "removed-model"],
+                "primary",
+                [
+                    {"name": "busy-model", "transient": True},
+                    {"name": "removed-model", "transient": False},
+                ],
+            ),
+            ["primary", "busy-model"],
+        )
 
 
 class ProbeError(Exception):
@@ -549,6 +566,37 @@ class PipelineStageTests(unittest.TestCase):
         self.assertNotIn("state_update", body)
         self.assertEqual(update["actual_time_range"], "교대 시작 뒤 20분")
 
+    def test_body_transient_failure_switches_to_probed_fallback_model(self) -> None:
+        client = SimpleNamespace(
+            models=ProbeModels({"gemini-fallback": ["OK"]})
+        )
+        transient = ProbeError(503, "high demand")
+        successful = ("제목", "본문", valid_update())
+        with patch(
+            "scripts.generate_episode.generate_episode_from_plan",
+            side_effect=[transient, successful],
+        ) as generate:
+            title, body, _, model, probed, failures = (
+                generate_episode_with_model_fallback(
+                    client,
+                    ["gemini-primary", "gemini-fallback"],
+                    {},
+                    1,
+                    valid_plan(),
+                    already_probed=["gemini-primary"],
+                    sleep=lambda _: None,
+                )
+            )
+
+        self.assertEqual((title, body, model), ("제목", "본문", "gemini-fallback"))
+        self.assertEqual(probed, ["gemini-primary", "gemini-fallback"])
+        self.assertEqual(failures[0]["stage"], "body_generation")
+        self.assertEqual(generate.call_count, 2)
+        self.assertEqual(
+            [call[0] for call in client.models.calls],
+            ["gemini-fallback"],
+        )
+
     def test_primary_arc_metadata_mismatch_is_normalized_without_retry(self) -> None:
         update = valid_update()
         update["primary_arc_progress"]["arc"] = "생계와 부채"
@@ -709,6 +757,21 @@ class ResponseTests(unittest.TestCase):
 
 
 class StateAndFileTests(unittest.TestCase):
+    def test_daily_generation_guard_uses_kst_calendar_date(self) -> None:
+        now = datetime(2026, 1, 1, 16, 0, tzinfo=timezone.utc)
+        self.assertTrue(
+            generated_on_kst_date(
+                {"last_generated_at": "2026-01-01T15:30:00+00:00"},
+                now,
+            )
+        )
+        self.assertFalse(
+            generated_on_kst_date(
+                {"last_generated_at": "2026-01-01T14:30:00+00:00"},
+                now,
+            )
+        )
+
     def test_calculate_next_episode_and_mismatch(self) -> None:
         paths = [Path("001.md"), Path("002.md")]
         self.assertEqual(calculate_next_episode({"next_episode": 3}, paths), 3)
