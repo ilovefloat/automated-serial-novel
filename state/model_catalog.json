@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-07-28T11:47:28.868400+00:00",
+  "checked_at": "2026-07-28T19:55:05.926111+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -710,11 +710,18 @@
     "nano-banana-pro-preview"
   ],
   "probe_succeeded_models": [
-    "gemini-3.5-flash"
+    "gemini-3.5-flash-lite"
   ],
-  "probe_failed_models": [],
+  "probe_failed_models": [
+    {
+      "name": "gemini-3.5-flash",
+      "status_code": 503,
+      "reason": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+      "transient": true
+    }
+  ],
   "generation_failed_models": [],
-  "selected_model": "gemini-3.5-flash",
+  "selected_model": "gemini-3.5-flash-lite",
   "selection_priority": [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",

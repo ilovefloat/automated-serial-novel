@@ -30,6 +30,12 @@
       "title": "지문의 무게",
       "date": "2026-07-28",
       "file": "episodes/005.md"
+    },
+    {
+      "episode": 6,
+      "title": "붉은 글씨의 무게",
+      "date": "2026-07-28",
+      "file": "episodes/006.md"
     }
   ]
 }
