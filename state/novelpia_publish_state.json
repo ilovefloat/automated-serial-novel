@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 6,
-  "last_success_at": "2026-07-28T19:56:33+00:00",
-  "episode_path": "docs/episodes/006.md",
-  "title": "붉은 글씨의 무게",
-  "published_url": "https://novelpia.com/viewer/5908564",
+  "last_success_episode": 7,
+  "last_success_at": "2026-07-30T06:06:07+00:00",
+  "episode_path": "docs/episodes/007.md",
+  "title": "낙인과 진동",
+  "published_url": "https://novelpia.com/viewer/5913049",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -13,7 +13,8 @@
     3,
     4,
     5,
-    6
+    6,
+    7
   ],
   "unknown_result_episodes": []
 }
