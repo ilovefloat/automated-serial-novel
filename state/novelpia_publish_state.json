@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 7,
-  "last_success_at": "2026-07-30T06:06:07+00:00",
-  "episode_path": "docs/episodes/007.md",
-  "title": "낙인과 진동",
-  "published_url": "https://novelpia.com/viewer/5913049",
+  "last_success_episode": 8,
+  "last_success_at": "2026-08-01T19:39:50+00:00",
+  "episode_path": "docs/episodes/008.md",
+  "title": "침묵의 무게",
+  "published_url": "https://novelpia.com/viewer/5922649",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -14,7 +14,8 @@
     4,
     5,
     6,
-    7
+    7,
+    8
   ],
   "unknown_result_episodes": []
 }
