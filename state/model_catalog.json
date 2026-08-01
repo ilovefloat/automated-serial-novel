@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-07-30T06:02:03.378775+00:00",
+  "checked_at": "2026-08-01T19:36:39.978867+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -503,6 +503,27 @@
       "output_token_limit": 65536
     },
     {
+      "name": "gemini-robotics-er-2-preview",
+      "display_name": "Gemini Robotics-ER 2 Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-robotics-er-2-streaming-preview",
+      "display_name": "Gemini Robotics-ER 2 Streaming Preview",
+      "supported_actions": [
+        "bidiGenerateContent"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 65536
+    },
+    {
       "name": "gemma-4-26b-a4b-it",
       "display_name": "Gemma 4 26B A4B IT",
       "supported_actions": [
@@ -654,6 +675,8 @@
     "gemini-pro-latest",
     "gemini-robotics-er-1.5-preview",
     "gemini-robotics-er-1.6-preview",
+    "gemini-robotics-er-2-preview",
+    "gemini-robotics-er-2-streaming-preview",
     "gemma-4-26b-a4b-it",
     "gemma-4-31b-it",
     "imagen-4.0-fast-generate-001",
@@ -703,6 +726,7 @@
     "gemini-pro-latest",
     "gemini-robotics-er-1.5-preview",
     "gemini-robotics-er-1.6-preview",
+    "gemini-robotics-er-2-preview",
     "gemma-4-26b-a4b-it",
     "gemma-4-31b-it",
     "lyria-3-clip-preview",
@@ -1221,6 +1245,27 @@
         "countTokens",
         "createCachedContent",
         "batchGenerateContent"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-robotics-er-2-preview",
+      "display_name": "Gemini Robotics-ER 2 Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-robotics-er-2-streaming-preview",
+      "display_name": "Gemini Robotics-ER 2 Streaming Preview",
+      "supported_actions": [
+        "bidiGenerateContent"
       ],
       "input_token_limit": 131072,
       "output_token_limit": 65536
