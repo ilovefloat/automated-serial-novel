@@ -48,6 +48,12 @@
       "title": "침묵의 무게",
       "date": "2026-08-01",
       "file": "episodes/008.md"
+    },
+    {
+      "episode": 9,
+      "title": "침묵의 서명",
+      "date": "2026-08-02",
+      "file": "episodes/009.md"
     }
   ]
 }
