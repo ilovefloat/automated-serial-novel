@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 9,
-  "last_success_at": "2026-08-02T23:45:38+00:00",
-  "episode_path": "docs/episodes/009.md",
-  "title": "침묵의 서명",
-  "published_url": "https://novelpia.com/viewer/5926054",
+  "last_success_episode": 10,
+  "last_success_at": "2026-08-03T20:02:30+00:00",
+  "episode_path": "docs/episodes/010.md",
+  "title": "두 개의 톱니",
+  "published_url": "https://novelpia.com/viewer/5929412",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -16,7 +16,8 @@
     6,
     7,
     8,
-    9
+    9,
+    10
   ],
   "unknown_result_episodes": []
 }
