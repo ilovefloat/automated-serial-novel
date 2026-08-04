@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 10,
-  "last_success_at": "2026-08-03T20:02:30+00:00",
-  "episode_path": "docs/episodes/010.md",
-  "title": "두 개의 톱니",
-  "published_url": "https://novelpia.com/viewer/5929412",
+  "last_success_episode": 11,
+  "last_success_at": "2026-08-04T20:02:49+00:00",
+  "episode_path": "docs/episodes/011.md",
+  "title": "침묵의 덫",
+  "published_url": "https://novelpia.com/viewer/5932825",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -17,7 +17,8 @@
     7,
     8,
     9,
-    10
+    10,
+    11
   ],
   "unknown_result_episodes": []
 }
