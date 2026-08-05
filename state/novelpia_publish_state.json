@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 11,
-  "last_success_at": "2026-08-04T20:02:49+00:00",
-  "episode_path": "docs/episodes/011.md",
-  "title": "침묵의 덫",
-  "published_url": "https://novelpia.com/viewer/5932825",
+  "last_success_episode": 12,
+  "last_success_at": "2026-08-05T19:59:33+00:00",
+  "episode_path": "docs/episodes/012.md",
+  "title": "공범의 가격",
+  "published_url": "https://novelpia.com/viewer/5936096",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -18,7 +18,8 @@
     8,
     9,
     10,
-    11
+    11,
+    12
   ],
   "unknown_result_episodes": []
 }
