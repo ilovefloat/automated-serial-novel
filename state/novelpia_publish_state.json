@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 12,
-  "last_success_at": "2026-08-05T19:59:33+00:00",
-  "episode_path": "docs/episodes/012.md",
-  "title": "공범의 가격",
-  "published_url": "https://novelpia.com/viewer/5936096",
+  "last_success_episode": 13,
+  "last_success_at": "2026-08-07T05:08:04+00:00",
+  "episode_path": "docs/episodes/013.md",
+  "title": "단두대의 검토인",
+  "published_url": "https://novelpia.com/viewer/5940204",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -19,7 +19,8 @@
     9,
     10,
     11,
-    12
+    12,
+    13
   ],
   "unknown_result_episodes": []
 }
