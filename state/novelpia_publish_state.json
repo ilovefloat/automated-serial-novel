@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 13,
-  "last_success_at": "2026-08-07T05:08:04+00:00",
-  "episode_path": "docs/episodes/013.md",
-  "title": "단두대의 검토인",
-  "published_url": "https://novelpia.com/viewer/5940204",
+  "last_success_episode": 14,
+  "last_success_at": "2026-08-07T19:21:27+00:00",
+  "episode_path": "docs/episodes/014.md",
+  "title": "규격화된 고백",
+  "published_url": "https://novelpia.com/viewer/5942677",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -20,7 +20,8 @@
     10,
     11,
     12,
-    13
+    13,
+    14
   ],
   "unknown_result_episodes": []
 }
