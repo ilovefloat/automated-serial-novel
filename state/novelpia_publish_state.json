@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 14,
-  "last_success_at": "2026-08-07T19:21:27+00:00",
-  "episode_path": "docs/episodes/014.md",
-  "title": "규격화된 고백",
-  "published_url": "https://novelpia.com/viewer/5942677",
+  "last_success_episode": 15,
+  "last_success_at": "2026-08-09T04:43:02+00:00",
+  "episode_path": "docs/episodes/015.md",
+  "title": "누락된 페이지",
+  "published_url": "https://novelpia.com/viewer/5946741",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -21,7 +21,8 @@
     11,
     12,
     13,
-    14
+    14,
+    15
   ],
   "unknown_result_episodes": []
 }
