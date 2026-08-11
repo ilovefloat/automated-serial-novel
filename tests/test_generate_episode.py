@@ -36,6 +36,7 @@ from scripts.generate_episode import (
     probe_and_select_model,
     safe_error_reason,
     save_episode_and_state,
+    server_retry_delay,
 )
 
 
@@ -1010,6 +1011,28 @@ class StateAndFileTests(unittest.TestCase):
             "ok",
         )
         self.assertEqual(sleeps, [1, 2])
+
+    def test_retry_honors_gemini_quota_reset_hint(self) -> None:
+        error = ProbeError(
+            429,
+            "Quota exceeded. Please retry in 59.901879832s.",
+        )
+        self.assertEqual(server_retry_delay(error), 60)
+
+        outcomes: list[object] = [error, "ok"]
+        sleeps: list[float] = []
+
+        def operation() -> object:
+            outcome = outcomes.pop(0)
+            if isinstance(outcome, BaseException):
+                raise outcome
+            return outcome
+
+        self.assertEqual(
+            call_with_retry(operation, "quota test", sleep=sleeps.append),
+            "ok",
+        )
+        self.assertEqual(sleeps, [60])
 
 
 class LoggingAndNetworkSafetyTests(unittest.TestCase):

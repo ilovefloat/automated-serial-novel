@@ -1033,6 +1033,19 @@ def is_transient_error(exc: BaseException) -> bool:
     }
 
 
+def server_retry_delay(exc: BaseException, maximum: int = 120) -> int | None:
+    """Read Gemini's retry hint without trusting an unbounded server delay."""
+    message = safe_error_reason(exc, limit=2000).lower()
+    match = re.search(
+        r"(?:retry\s+in\s*|retrydelay['\"\s:]+)([0-9]+(?:\.[0-9]+)?)s",
+        message,
+    )
+    if not match:
+        return None
+    # Add a one-second margin so a 59.9s quota window has actually reset.
+    return min(maximum, max(1, int(float(match.group(1))) + 1))
+
+
 def call_with_retry(
     operation: Callable[[], T],
     label: str,
@@ -1045,7 +1058,10 @@ def call_with_retry(
         except Exception as exc:
             if not is_transient_error(exc) or attempt == attempts:
                 raise
-            delay = 2 ** (attempt - 1)
+            delay = max(
+                2 ** (attempt - 1),
+                server_retry_delay(exc) or 0,
+            )
             log(
                 f"{label} 일시 오류, {delay}초 후 재시도 "
                 f"({attempt}/{attempts - 1})"
