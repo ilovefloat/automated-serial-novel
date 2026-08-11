@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-08-09T04:40:21.984735+00:00",
+  "checked_at": "2026-08-11T18:54:53.579377+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -49,54 +49,6 @@
       ],
       "input_token_limit": 131072,
       "output_token_limit": 65536
-    },
-    {
-      "name": "gemini-2.0-flash",
-      "display_name": "Gemini 2.0 Flash",
-      "supported_actions": [
-        "generateContent",
-        "countTokens",
-        "createCachedContent",
-        "batchGenerateContent"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 8192
-    },
-    {
-      "name": "gemini-2.0-flash-001",
-      "display_name": "Gemini 2.0 Flash 001",
-      "supported_actions": [
-        "generateContent",
-        "countTokens",
-        "createCachedContent",
-        "batchGenerateContent"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 8192
-    },
-    {
-      "name": "gemini-2.0-flash-lite",
-      "display_name": "Gemini 2.0 Flash-Lite",
-      "supported_actions": [
-        "generateContent",
-        "countTokens",
-        "createCachedContent",
-        "batchGenerateContent"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 8192
-    },
-    {
-      "name": "gemini-2.0-flash-lite-001",
-      "display_name": "Gemini 2.0 Flash-Lite 001",
-      "supported_actions": [
-        "generateContent",
-        "countTokens",
-        "createCachedContent",
-        "batchGenerateContent"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 8192
     },
     {
       "name": "gemini-2.5-computer-use-preview-10-2025",
@@ -239,18 +191,6 @@
       ],
       "input_token_limit": 131072,
       "output_token_limit": 32768
-    },
-    {
-      "name": "gemini-3-pro-preview",
-      "display_name": "Gemini 3 Pro Preview",
-      "supported_actions": [
-        "generateContent",
-        "countTokens",
-        "createCachedContent",
-        "batchGenerateContent"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 65536
     },
     {
       "name": "gemini-3.1-flash-image",
@@ -476,16 +416,6 @@
         "countTokens",
         "createCachedContent",
         "batchGenerateContent"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 65536
-    },
-    {
-      "name": "gemini-robotics-er-1.5-preview",
-      "display_name": "Gemini Robotics-ER 1.5 Preview",
-      "supported_actions": [
-        "generateContent",
-        "countTokens"
       ],
       "input_token_limit": 1048576,
       "output_token_limit": 65536
@@ -635,10 +565,6 @@
     "deep-research-max-preview-04-2026",
     "deep-research-preview-04-2026",
     "deep-research-pro-preview-12-2025",
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-001",
-    "gemini-2.0-flash-lite",
-    "gemini-2.0-flash-lite-001",
     "gemini-2.5-computer-use-preview-10-2025",
     "gemini-2.5-flash",
     "gemini-2.5-flash-image",
@@ -652,7 +578,6 @@
     "gemini-3-flash-preview",
     "gemini-3-pro-image",
     "gemini-3-pro-image-preview",
-    "gemini-3-pro-preview",
     "gemini-3.1-flash-image",
     "gemini-3.1-flash-image-preview",
     "gemini-3.1-flash-lite",
@@ -673,7 +598,6 @@
     "gemini-flash-lite-latest",
     "gemini-omni-flash-preview",
     "gemini-pro-latest",
-    "gemini-robotics-er-1.5-preview",
     "gemini-robotics-er-1.6-preview",
     "gemini-robotics-er-2-preview",
     "gemini-robotics-er-2-streaming-preview",
@@ -694,10 +618,6 @@
     "deep-research-max-preview-04-2026",
     "deep-research-preview-04-2026",
     "deep-research-pro-preview-12-2025",
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-001",
-    "gemini-2.0-flash-lite",
-    "gemini-2.0-flash-lite-001",
     "gemini-2.5-computer-use-preview-10-2025",
     "gemini-2.5-flash",
     "gemini-2.5-flash-image",
@@ -708,7 +628,6 @@
     "gemini-3-flash-preview",
     "gemini-3-pro-image",
     "gemini-3-pro-image-preview",
-    "gemini-3-pro-preview",
     "gemini-3.1-flash-image",
     "gemini-3.1-flash-image-preview",
     "gemini-3.1-flash-lite",
@@ -724,7 +643,6 @@
     "gemini-flash-lite-latest",
     "gemini-omni-flash-preview",
     "gemini-pro-latest",
-    "gemini-robotics-er-1.5-preview",
     "gemini-robotics-er-1.6-preview",
     "gemini-robotics-er-2-preview",
     "gemma-4-26b-a4b-it",
@@ -734,11 +652,20 @@
     "nano-banana-pro-preview"
   ],
   "probe_succeeded_models": [
-    "gemini-3.5-flash"
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite"
   ],
   "probe_failed_models": [],
-  "generation_failed_models": [],
-  "selected_model": "gemini-3.5-flash",
+  "generation_failed_models": [
+    {
+      "name": "gemini-3.5-flash",
+      "stage": "body_generation",
+      "status_code": 429,
+      "reason": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. * Quota exceeded for metric: generativelanguage.googleapis.c",
+      "transient": true
+    }
+  ],
+  "selected_model": "gemini-3.5-flash-lite",
   "selection_priority": [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
@@ -796,54 +723,6 @@
       ],
       "input_token_limit": 131072,
       "output_token_limit": 65536
-    },
-    {
-      "name": "gemini-2.0-flash",
-      "display_name": "Gemini 2.0 Flash",
-      "supported_actions": [
-        "generateContent",
-        "countTokens",
-        "createCachedContent",
-        "batchGenerateContent"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 8192
-    },
-    {
-      "name": "gemini-2.0-flash-001",
-      "display_name": "Gemini 2.0 Flash 001",
-      "supported_actions": [
-        "generateContent",
-        "countTokens",
-        "createCachedContent",
-        "batchGenerateContent"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 8192
-    },
-    {
-      "name": "gemini-2.0-flash-lite",
-      "display_name": "Gemini 2.0 Flash-Lite",
-      "supported_actions": [
-        "generateContent",
-        "countTokens",
-        "createCachedContent",
-        "batchGenerateContent"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 8192
-    },
-    {
-      "name": "gemini-2.0-flash-lite-001",
-      "display_name": "Gemini 2.0 Flash-Lite 001",
-      "supported_actions": [
-        "generateContent",
-        "countTokens",
-        "createCachedContent",
-        "batchGenerateContent"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 8192
     },
     {
       "name": "gemini-2.5-computer-use-preview-10-2025",
@@ -986,18 +865,6 @@
       ],
       "input_token_limit": 131072,
       "output_token_limit": 32768
-    },
-    {
-      "name": "gemini-3-pro-preview",
-      "display_name": "Gemini 3 Pro Preview",
-      "supported_actions": [
-        "generateContent",
-        "countTokens",
-        "createCachedContent",
-        "batchGenerateContent"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 65536
     },
     {
       "name": "gemini-3.1-flash-image",
@@ -1223,16 +1090,6 @@
         "countTokens",
         "createCachedContent",
         "batchGenerateContent"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 65536
-    },
-    {
-      "name": "gemini-robotics-er-1.5-preview",
-      "display_name": "Gemini Robotics-ER 1.5 Preview",
-      "supported_actions": [
-        "generateContent",
-        "countTokens"
       ],
       "input_token_limit": 1048576,
       "output_token_limit": 65536
