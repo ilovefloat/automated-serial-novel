@@ -25,6 +25,7 @@ from scripts.generate_episode import (
     extract_title_and_body,
     generate_episode_from_plan,
     generate_episode_with_model_fallback,
+    generate_scene_plan_with_model_fallback,
     generated_on_kst_date,
     generate_scene_plan,
     list_generation_models,
@@ -771,6 +772,31 @@ class PipelineStageTests(unittest.TestCase):
             )
         self.assertEqual(result[3], "gemini-fallback")
         self.assertFalse(result[5][0]["transient"])
+        self.assertEqual(generate.call_count, 2)
+
+    def test_plan_quota_failure_switches_model(self) -> None:
+        client = SimpleNamespace(
+            models=ProbeModels({"gemini-fallback": ["OK"]})
+        )
+        expected = valid_plan()
+        with patch(
+            "scripts.generate_episode.generate_scene_plan",
+            side_effect=[ProbeError(429, "quota"), expected],
+        ) as generate:
+            plan, model, probed, failures = (
+                generate_scene_plan_with_model_fallback(
+                    client,
+                    ["gemini-primary", "gemini-fallback"],
+                    {},
+                    1,
+                    already_probed=["gemini-primary"],
+                    sleep=lambda _: None,
+                )
+            )
+        self.assertEqual(plan, expected)
+        self.assertEqual(model, "gemini-fallback")
+        self.assertIn("gemini-fallback", probed)
+        self.assertEqual(failures[0]["stage"], "plan_generation")
         self.assertEqual(generate.call_count, 2)
 
     def test_completely_different_event_triggers_body_retry(self) -> None:

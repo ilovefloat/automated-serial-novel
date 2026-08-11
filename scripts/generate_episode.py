@@ -1330,6 +1330,78 @@ def generate_scene_plan(
     raise AssertionError("unreachable")
 
 
+def generate_scene_plan_with_model_fallback(
+    client: genai.Client,
+    candidates: list[str],
+    state: dict[str, Any],
+    episode_number: int,
+    feedback: str = "(첫 계획: 추가 피드백 없음)",
+    already_probed: Iterable[str] = (),
+    sleep: Callable[[float], None] = time.sleep,
+) -> tuple[dict[str, Any], str, list[str], list[dict[str, Any]]]:
+    """Generate a plan without pinning the whole run to one model's quota."""
+    ordered = list(dict.fromkeys(candidates))[:MAX_BODY_MODEL_CANDIDATES]
+    if not ordered:
+        raise ValueError("장면 계획에 사용할 모델 후보가 없습니다.")
+    probed = list(dict.fromkeys(already_probed))
+    probed_set = set(probed)
+    failures: list[dict[str, Any]] = []
+    last_recoverable: Exception | None = None
+
+    for index, candidate in enumerate(ordered, start=1):
+        if candidate not in probed_set:
+            log(f"계획 대체 모델 probe 시작: {candidate} ({index}/{len(ordered)})")
+            try:
+                probe_model(client, candidate, sleep=sleep)
+            except Exception as exc:
+                failure = {
+                    "name": candidate,
+                    "stage": "plan_fallback_probe",
+                    "status_code": error_status_code(exc) or "UNKNOWN",
+                    "reason": safe_error_reason(exc),
+                    "transient": is_transient_error(exc),
+                }
+                failures.append(failure)
+                if (
+                    is_transient_error(exc)
+                    or is_model_unavailable_error(exc)
+                    or is_model_incompatible_error(exc)
+                ):
+                    continue
+                raise
+            probed.append(candidate)
+            probed_set.add(candidate)
+            log(f"계획 대체 모델 probe 성공: {candidate}")
+        try:
+            plan = generate_scene_plan(
+                client, candidate, state, episode_number, feedback
+            )
+            return plan, candidate, probed, failures
+        except Exception as exc:
+            if not is_transient_error(exc) and not isinstance(exc, ValueError):
+                raise
+            last_recoverable = exc
+            failures.append(
+                {
+                    "name": candidate,
+                    "stage": "plan_generation",
+                    "status_code": error_status_code(exc) or "UNKNOWN",
+                    "reason": safe_error_reason(exc),
+                    "transient": is_transient_error(exc),
+                }
+            )
+            if index < len(ordered):
+                log(
+                    "장면 계획 생성 실패가 반복되어 다음 모델로 전환합니다: "
+                    f"{candidate} -> {ordered[index]}"
+                )
+    if last_recoverable is not None:
+        raise last_recoverable
+    raise ModelProbeError(
+        "장면 계획용 대체 모델을 probe하지 못했습니다.", failures, probed
+    )
+
+
 def parse_generated_episode(
     raw: str, scene_plan: dict[str, Any] | None = None
 ) -> tuple[str, str, dict[str, Any]]:
@@ -1875,25 +1947,35 @@ def main(argv: list[str] | None = None) -> int:
     recent_records = recent_episode_records(
         fingerprints=state.get("recent_scene_fingerprints", []),
     )
+    generation_failures: list[dict[str, Any]] = []
+    plan_candidates = body_model_candidates(candidates, model, probe_failed)
     log("계획 생성 시작")
-    scene_plan = generate_scene_plan(
+    scene_plan, model, probe_succeeded, plan_failures = (
+        generate_scene_plan_with_model_fallback(
         client,
-        model,
+        plan_candidates,
         state,
         episode_number,
+        already_probed=probe_succeeded,
+        )
     )
+    generation_failures.extend(plan_failures)
     plan_report = plan_quality_report(scene_plan, state)
     if plan_needs_revision(plan_report):
         log(
             "장면 계획에서 연속성·냉각 기간·반복 위험을 감지해 한 번 재계획합니다."
         )
-        scene_plan = generate_scene_plan(
-            client,
-            model,
-            state,
-            episode_number,
-            revision_feedback(plan_report),
+        scene_plan, model, probe_succeeded, plan_failures = (
+            generate_scene_plan_with_model_fallback(
+                client,
+                [model] + [item for item in plan_candidates if item != model],
+                state,
+                episode_number,
+                revision_feedback(plan_report),
+                already_probed=probe_succeeded,
+            )
         )
+        generation_failures.extend(plan_failures)
         scene_plan, repairs = enforce_plan_state_constraints(scene_plan, state)
         for repair in repairs:
             log(f"재계획 안전 보정: {repair}")
@@ -1909,7 +1991,7 @@ def main(argv: list[str] | None = None) -> int:
         log("재계획 불필요")
 
     body_candidates = body_model_candidates(candidates, model, probe_failed)
-    title, body, update, model, probe_succeeded, generation_failed = (
+    title, body, update, model, probe_succeeded, body_failures = (
         generate_episode_with_model_fallback(
             client,
             body_candidates,
@@ -1919,13 +2001,14 @@ def main(argv: list[str] | None = None) -> int:
             already_probed=probe_succeeded,
         )
     )
+    generation_failures.extend(body_failures)
     catalog_document = model_catalog_document(
         catalog,
         model,
         probe_succeeded,
         probe_failed,
         generated_at,
-        generation_failed,
+        generation_failures,
     )
     atomic_write_text(
         target_catalog,
@@ -1944,13 +2027,17 @@ def main(argv: list[str] | None = None) -> int:
     )
     if similarity["too_similar"]:
         log("생성 원고의 반복 위험이 높아 한 번 재계획하고 재생성합니다.")
-        scene_plan = generate_scene_plan(
-            client,
-            model,
-            state,
-            episode_number,
-            revision_feedback(plan_report, similarity),
+        scene_plan, model, probe_succeeded, plan_failures = (
+            generate_scene_plan_with_model_fallback(
+                client,
+                [model] + [item for item in plan_candidates if item != model],
+                state,
+                episode_number,
+                revision_feedback(plan_report, similarity),
+                already_probed=probe_succeeded,
+            )
         )
+        generation_failures.extend(plan_failures)
         plan_report = plan_quality_report(scene_plan, state)
         if plan_needs_revision(plan_report):
             scene_plan, repairs = enforce_plan_state_constraints(scene_plan, state)
@@ -1982,14 +2069,14 @@ def main(argv: list[str] | None = None) -> int:
             scene_plan,
             already_probed=probe_succeeded,
         )
-        generation_failed.extend(retry_failures)
+        generation_failures.extend(retry_failures)
         catalog_document = model_catalog_document(
             catalog,
             model,
             probe_succeeded,
             probe_failed,
             generated_at,
-            generation_failed,
+            generation_failures,
         )
         atomic_write_text(
             target_catalog,
