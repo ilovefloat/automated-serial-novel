@@ -58,8 +58,9 @@ MIN_PUBLIC_CHARS = 700
 MAX_ATTEMPTS = 3
 BODY_GENERATION_ATTEMPTS = 6
 MAX_BODY_MODEL_CANDIDATES = 4
-MAX_RESPONSE_ATTEMPTS = 2
-MAX_PLAN_RESPONSE_ATTEMPTS = 2
+MAX_RESPONSE_ATTEMPTS = 3
+MAX_PLAN_RESPONSE_ATTEMPTS = 3
+GENERATION_MAX_OUTPUT_TOKENS = 16384
 MAX_HISTORY_ITEMS = 20
 MAX_FACT_ITEMS = 60
 PROBE_MAX_OUTPUT_TOKENS = 1
@@ -1277,7 +1278,7 @@ def generate_scene_plan(
                     top_p=0.9,
                     # The full Korean plan schema can exceed 2,048 tokens.
                     # A cutoff produces a syntactically unterminated JSON string.
-                    max_output_tokens=8192,
+                    max_output_tokens=GENERATION_MAX_OUTPUT_TOKENS,
                     response_mime_type="application/json",
                     response_json_schema=scene_plan_schema(),
                 ),
@@ -1332,7 +1333,7 @@ def generate_raw_response(
                 system_instruction=system_prompt,
                 temperature=0.85,
                 top_p=0.95,
-                max_output_tokens=8192,
+                max_output_tokens=GENERATION_MAX_OUTPUT_TOKENS,
                 response_mime_type="application/json",
                 response_json_schema=response_schema(),
             ),
@@ -1443,8 +1444,71 @@ def _concept_present(concept: str, text_tokens: set[str]) -> bool:
     concept_tokens = _meaningful_tokens(concept)
     if not concept_tokens:
         return True
-    overlap = concept_tokens & text_tokens
-    return len(overlap) >= max(1, (len(concept_tokens) + 2) // 3)
+    # Korean plans often use a long instruction sentence while the prose uses
+    # natural inflections, a given name, or a shorter paraphrase. Requiring a
+    # third of every instruction token made valid continuations impossible to
+    # pass (for example, "강태수" in the plan and "태수" in the prose).
+    matched = {
+        concept_token
+        for concept_token in concept_tokens
+        if any(
+            concept_token == text_token
+            or (
+                min(len(concept_token), len(text_token)) >= 2
+                and (
+                    concept_token in text_token
+                    or text_token in concept_token
+                )
+            )
+            for text_token in text_tokens
+        )
+    }
+    required = max(1, min(3, (len(concept_tokens) + 2) // 3))
+    return len(matched) >= required
+
+
+def enforce_plan_state_constraints(
+    plan: dict[str, Any], state: dict[str, Any]
+) -> tuple[dict[str, Any], list[str]]:
+    """Deterministically preserve state invariants after an imperfect replan."""
+    repaired = copy.deepcopy(plan)
+    repairs: list[str] = []
+    current_scene = str(state.get("current_scene") or "").strip()
+    required_actions = [
+        str(action).strip()
+        for action in state.get("unresolved_immediate_actions", [])
+        if str(action).strip()
+    ]
+    if current_scene or required_actions:
+        if not repaired.get("direct_continuation"):
+            repaired["direct_continuation"] = True
+            repairs.append("direct_continuation=true")
+        continued = [
+            str(action).strip()
+            for action in repaired.get("continued_actions", [])
+            if str(action).strip()
+        ]
+        missing = [action for action in required_actions if action not in continued]
+        if missing:
+            repaired["continued_actions"] = list(dict.fromkeys(continued + missing))
+            repairs.append("continued_actions restored from story state")
+        required_connection = str(
+            state.get("next_required_connection") or current_scene
+        ).strip()
+        if required_connection and not str(
+            repaired.get("continuation_point") or ""
+        ).strip():
+            repaired["continuation_point"] = required_connection
+            repairs.append("continuation_point restored from story state")
+
+    if not repaired.get("direct_continuation"):
+        cooling = set(active_cooldowns(state))
+        motifs = list(repaired.get("motifs_used", []))
+        allowed = [motif for motif in motifs if motif not in cooling]
+        if allowed != motifs:
+            repaired["motifs_used"] = allowed
+            repairs.append("cooldown motifs removed")
+    return validate_scene_plan(repaired), repairs
 
 
 def body_plan_relevance_report(
@@ -1515,9 +1579,18 @@ def generate_episode_from_plan(
     scene_plan: dict[str, Any],
 ) -> tuple[str, str, dict[str, Any]]:
     system_prompt = read_text(PROMPTS / "system.md")
-    user_prompt = build_prompt(state, episode_number, scene_plan)
+    base_user_prompt = build_prompt(state, episode_number, scene_plan)
+    attempt_feedback = ""
     for response_attempt in range(1, MAX_RESPONSE_ATTEMPTS + 1):
         log(f"본문 생성 ({response_attempt}/{MAX_RESPONSE_ATTEMPTS})")
+        user_prompt = base_user_prompt
+        if attempt_feedback:
+            user_prompt += (
+                "\n\n## 직전 응답 폐기 사유와 이번 재작성의 필수 조건\n"
+                + attempt_feedback
+                + "\n직전 원고를 수정해서 되풀이하지 말고, 처음부터 완결된 JSON "
+                "객체 하나를 다시 작성하라. state_update 값은 간결하게 쓴다."
+            )
         raw = generate_raw_response(client, model, system_prompt, user_prompt)
         try:
             title, body, update = parse_generated_episode(raw, scene_plan)
@@ -1534,9 +1607,10 @@ def generate_episode_from_plan(
         except ValueError as exc:
             if response_attempt == MAX_RESPONSE_ATTEMPTS:
                 raise
+            attempt_feedback = safe_error_reason(exc, limit=1200)
             log(
                 f"본문 형식 또는 실질 관련성 검증 실패: {exc}; "
-                "본문 생성을 한 번 더 시도합니다."
+                "실패 이유를 반영해 본문을 다시 생성합니다."
             )
     raise AssertionError("unreachable")
 
@@ -1565,7 +1639,7 @@ def generate_episode_with_model_fallback(
     probed = list(dict.fromkeys(already_probed))
     probed_set = set(probed)
     failures: list[dict[str, Any]] = []
-    last_transient: Exception | None = None
+    last_recoverable: Exception | None = None
 
     for index, candidate in enumerate(ordered, start=1):
         if candidate not in probed_set:
@@ -1609,26 +1683,25 @@ def generate_episode_with_model_fallback(
             )
             return title, body, update, candidate, probed, failures
         except Exception as exc:
-            if not is_transient_error(exc):
+            recoverable_output = isinstance(exc, ValueError)
+            if not is_transient_error(exc) and not recoverable_output:
                 raise
-            last_transient = exc
+            last_recoverable = exc
             failure = {
                 "name": candidate,
                 "stage": "body_generation",
                 "status_code": error_status_code(exc) or "UNKNOWN",
                 "reason": safe_error_reason(exc),
-                "transient": True,
+                "transient": is_transient_error(exc),
             }
             failures.append(failure)
             if index < len(ordered):
-                log(
-                    f"본문 생성 일시 오류가 {BODY_GENERATION_ATTEMPTS}회 시도 후에도 "
-                    f"계속되어 다음 모델로 전환합니다: "
-                    f"{candidate} -> {ordered[index]}"
-                )
+                reason = "일시 오류" if is_transient_error(exc) else "출력 검증 실패"
+                log(f"본문 {reason}가 반복되어 다음 모델로 전환합니다: "
+                    f"{candidate} -> {ordered[index]}")
 
-    if last_transient is not None:
-        raise last_transient
+    if last_recoverable is not None:
+        raise last_recoverable
     raise ModelProbeError(
         "본문 생성용 대체 모델을 probe하지 못했습니다.",
         failures,
@@ -1794,9 +1867,7 @@ def main(argv: list[str] | None = None) -> int:
         episode_number,
     )
     plan_report = plan_quality_report(scene_plan, state)
-    quality_retry_used = False
     if plan_needs_revision(plan_report):
-        quality_retry_used = True
         log(
             "장면 계획에서 연속성·냉각 기간·반복 위험을 감지해 한 번 재계획합니다."
         )
@@ -1807,12 +1878,17 @@ def main(argv: list[str] | None = None) -> int:
             episode_number,
             revision_feedback(plan_report),
         )
+        scene_plan, repairs = enforce_plan_state_constraints(scene_plan, state)
+        for repair in repairs:
+            log(f"재계획 안전 보정: {repair}")
         plan_report = plan_quality_report(scene_plan, state)
         if plan_needs_revision(plan_report):
-            raise ValueError(
-                "재계획 후에도 연속성·냉각 기간·반복 위험 조건을 충족하지 못했습니다."
+            log(
+                "재계획 후 남은 품질 경고를 기록하고 생성을 계속합니다: "
+                + json.dumps(plan_report, ensure_ascii=False)
             )
-        log("재계획 완료")
+        else:
+            log("재계획 완료")
     else:
         log("재계획 불필요")
 
@@ -1851,11 +1927,6 @@ def main(argv: list[str] | None = None) -> int:
         f"(비교 화: {similarity['similar_episode']})"
     )
     if similarity["too_similar"]:
-        if quality_retry_used:
-            raise ValueError(
-                "허용된 품질 재시도를 이미 사용했고 생성 원고의 반복 위험이 높습니다."
-            )
-        quality_retry_used = True
         log("생성 원고의 반복 위험이 높아 한 번 재계획하고 재생성합니다.")
         scene_plan = generate_scene_plan(
             client,
@@ -1866,7 +1937,15 @@ def main(argv: list[str] | None = None) -> int:
         )
         plan_report = plan_quality_report(scene_plan, state)
         if plan_needs_revision(plan_report):
-            raise ValueError("유사도 재계획이 서사 제약을 충족하지 못했습니다.")
+            scene_plan, repairs = enforce_plan_state_constraints(scene_plan, state)
+            for repair in repairs:
+                log(f"유사도 재계획 안전 보정: {repair}")
+            plan_report = plan_quality_report(scene_plan, state)
+            if plan_needs_revision(plan_report):
+                log(
+                    "유사도 재계획의 남은 품질 경고를 기록하고 계속합니다: "
+                    + json.dumps(plan_report, ensure_ascii=False)
+                )
         retry_candidates = [model] + [
             candidate
             for candidate in body_candidates
@@ -1909,7 +1988,10 @@ def main(argv: list[str] | None = None) -> int:
         )
         log(f"재생성 후 최근 원고 최대 유사도: {similarity['max_score']:.4f}")
         if similarity["too_similar"]:
-            raise ValueError("재생성 후에도 최근 원고와 지나치게 유사합니다.")
+            log(
+                "재생성 후에도 유사도 경고가 남았지만 유효한 원고를 폐기하지 않고 "
+                "상태의 반복 경고에 기록합니다."
+            )
 
     new_state = merge_state(
         state,

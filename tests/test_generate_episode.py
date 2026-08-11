@@ -12,6 +12,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from scripts.generate_episode import (
+    GENERATION_MAX_OUTPUT_TOKENS,
     ModelProbeError,
     PREFERRED_MODELS,
     atomic_create_text,
@@ -20,6 +21,7 @@ from scripts.generate_episode import (
     calculate_next_episode,
     call_with_retry,
     create_gemini_client,
+    enforce_plan_state_constraints,
     extract_title_and_body,
     generate_episode_from_plan,
     generate_episode_with_model_fallback,
@@ -497,7 +499,10 @@ class PipelineStageTests(unittest.TestCase):
         )
         self.assertEqual(generated["central_scene"], "세척실 첫 교대")
         self.assertEqual(client.models.calls[0][2].response_mime_type, "application/json")
-        self.assertEqual(client.models.calls[0][2].max_output_tokens, 8192)
+        self.assertEqual(
+            client.models.calls[0][2].max_output_tokens,
+            GENERATION_MAX_OUTPUT_TOKENS,
+        )
 
     def test_malformed_plan_json_is_regenerated_once(self) -> None:
         client = SimpleNamespace(
@@ -530,6 +535,7 @@ class PipelineStageTests(unittest.TestCase):
                     "gemini-test": [
                         '{"continuation_point": "첫 번째 잘림',
                         '{"continuation_point": "두 번째 잘림',
+                        '{"continuation_point": "세 번째 잘림',
                     ]
                 }
             )
@@ -541,7 +547,7 @@ class PipelineStageTests(unittest.TestCase):
                 {"history": [], "recent_scene_fingerprints": []},
                 1,
             )
-        self.assertEqual(len(client.models.calls), 2)
+        self.assertEqual(len(client.models.calls), 3)
 
     def test_body_stage_uses_plan_and_returns_separate_state(self) -> None:
         public = "# 세척실\n\n" + ("물비린내가 바닥에 남아 있었다. " * 80)
@@ -691,6 +697,80 @@ class PipelineStageTests(unittest.TestCase):
             client, "gemini-test", state, 1, valid_plan()
         )
         self.assertEqual(len(client.models.calls), 2)
+
+    def test_retry_prompt_contains_the_actual_validation_failure(self) -> None:
+        client = SimpleNamespace(
+            models=ProbeModels(
+                {
+                    "gemini-test": [
+                        self.response(
+                            valid_update(),
+                            "옥상에서 계약 승인 서류와 회의만 검토했다. ",
+                            "옥상 회의",
+                        ),
+                        self.response(valid_update()),
+                    ]
+                }
+            )
+        )
+        generate_episode_from_plan(
+            client, "gemini-test", {}, 1, valid_plan()
+        )
+        self.assertIn("직전 응답 폐기 사유", client.models.calls[1][1])
+        self.assertIn("계획의 중심 사건", client.models.calls[1][1])
+
+    def test_long_immediate_action_accepts_natural_paraphrase(self) -> None:
+        plan = valid_plan()
+        plan["main_characters"] = ["강태수"]
+        plan["central_scene"] = "반려 버튼 앞의 선택"
+        state = {
+            "unresolved_immediate_actions": [
+                "반려 버튼 위의 손가락 묘사에서 직접 시작하여, 태수가 검증 "
+                "시스템의 덫을 피해 갈 임시방편이나 내적 갈등을 묘사함"
+            ]
+        }
+        report = body_plan_relevance_report(
+            "선택",
+            "태수는 반려 버튼 위에서 손가락을 떼고 임시방편을 생각했다.",
+            plan,
+            state,
+        )
+        self.assertTrue(report["relevant"], report["issues"])
+
+    def test_replan_constraints_are_repaired_from_story_state(self) -> None:
+        plan = valid_plan()
+        state = {
+            "current_scene": "반려 버튼 앞",
+            "next_required_connection": "멈춘 손가락에서 직접 이어진다",
+            "unresolved_immediate_actions": ["반려 여부를 결정한다"],
+            "motif_cooldowns": {},
+        }
+        repaired, repairs = enforce_plan_state_constraints(plan, state)
+        self.assertTrue(repaired["direct_continuation"])
+        self.assertIn("반려 여부를 결정한다", repaired["continued_actions"])
+        self.assertTrue(repairs)
+
+    def test_output_validation_failure_switches_model(self) -> None:
+        client = SimpleNamespace(
+            models=ProbeModels({"gemini-fallback": ["OK"]})
+        )
+        successful = ("제목", "본문", valid_update())
+        with patch(
+            "scripts.generate_episode.generate_episode_from_plan",
+            side_effect=[ValueError("truncated JSON"), successful],
+        ) as generate:
+            result = generate_episode_with_model_fallback(
+                client,
+                ["gemini-primary", "gemini-fallback"],
+                {},
+                1,
+                valid_plan(),
+                already_probed=["gemini-primary"],
+                sleep=lambda _: None,
+            )
+        self.assertEqual(result[3], "gemini-fallback")
+        self.assertFalse(result[5][0]["transient"])
+        self.assertEqual(generate.call_count, 2)
 
     def test_completely_different_event_triggers_body_retry(self) -> None:
         client = SimpleNamespace(
