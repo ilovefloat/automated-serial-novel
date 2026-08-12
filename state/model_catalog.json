@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-08-11T18:54:53.579377+00:00",
+  "checked_at": "2026-08-12T19:28:39.114628+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -653,19 +653,35 @@
   ],
   "probe_succeeded_models": [
     "gemini-3.5-flash",
-    "gemini-3.5-flash-lite"
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-flash-latest"
   ],
   "probe_failed_models": [],
   "generation_failed_models": [
     {
       "name": "gemini-3.5-flash",
       "stage": "body_generation",
-      "status_code": 429,
-      "reason": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. * Quota exceeded for metric: generativelanguage.googleapis.c",
-      "transient": true
+      "status_code": "UNKNOWN",
+      "reason": "본문이 계획과 실질적으로 무관합니다: unfinished scene 필수 즉각 행동 누락: ['해고 확정 문자를 확인한 후 자취방 안에서의 정서적 여파와 임시 저장된 원고를 바라보는 태수의 시선으로 이어감']",
+      "transient": false
+    },
+    {
+      "name": "gemini-3.5-flash-lite",
+      "stage": "body_generation",
+      "status_code": "UNKNOWN",
+      "reason": "본문이 계획과 실질적으로 무관합니다: 계획의 필수 인물이 한 명도 본문에 등장하지 않음",
+      "transient": false
+    },
+    {
+      "name": "gemini-3.1-flash-lite",
+      "stage": "body_generation",
+      "status_code": "UNKNOWN",
+      "reason": "본문이 계획과 실질적으로 무관합니다: 계획의 필수 인물이 한 명도 본문에 등장하지 않음",
+      "transient": false
     }
   ],
-  "selected_model": "gemini-3.5-flash-lite",
+  "selected_model": "gemini-flash-latest",
   "selection_priority": [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
