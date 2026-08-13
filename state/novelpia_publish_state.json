@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 17,
-  "last_success_at": "2026-08-12T19:35:23+00:00",
-  "episode_path": "docs/episodes/017.md",
-  "title": "경계 밖에서",
-  "published_url": "https://novelpia.com/viewer/5959728",
+  "last_success_episode": 18,
+  "last_success_at": "2026-08-13T19:33:53+00:00",
+  "episode_path": "docs/episodes/018.md",
+  "title": "회색의 서명",
+  "published_url": "https://novelpia.com/viewer/5962995",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -24,7 +24,8 @@
     14,
     15,
     16,
-    17
+    17,
+    18
   ],
   "unknown_result_episodes": []
 }
