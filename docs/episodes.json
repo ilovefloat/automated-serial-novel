@@ -108,6 +108,12 @@
       "title": "회색의 서명",
       "date": "2026-08-13",
       "file": "episodes/018.md"
+    },
+    {
+      "episode": 19,
+      "title": "소수점의 거절",
+      "date": "2026-08-14",
+      "file": "episodes/019.md"
     }
   ]
 }
