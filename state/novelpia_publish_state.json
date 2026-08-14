@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 18,
-  "last_success_at": "2026-08-13T19:33:53+00:00",
-  "episode_path": "docs/episodes/018.md",
-  "title": "회색의 서명",
-  "published_url": "https://novelpia.com/viewer/5962995",
+  "last_success_episode": 19,
+  "last_success_at": "2026-08-14T19:18:40+00:00",
+  "episode_path": "docs/episodes/019.md",
+  "title": "소수점의 거절",
+  "published_url": "https://novelpia.com/viewer/5966277",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -25,7 +25,8 @@
     15,
     16,
     17,
-    18
+    18,
+    19
   ],
   "unknown_result_episodes": []
 }
