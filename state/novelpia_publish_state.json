@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 19,
-  "last_success_at": "2026-08-14T19:18:40+00:00",
-  "episode_path": "docs/episodes/019.md",
-  "title": "소수점의 거절",
-  "published_url": "https://novelpia.com/viewer/5966277",
+  "last_success_episode": 20,
+  "last_success_at": "2026-08-15T18:51:36+00:00",
+  "episode_path": "docs/episodes/020.md",
+  "title": "회색의 고리",
+  "published_url": "https://novelpia.com/viewer/5969317",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -26,7 +26,8 @@
     16,
     17,
     18,
-    19
+    19,
+    20
   ],
   "unknown_result_episodes": []
 }
