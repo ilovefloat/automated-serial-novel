@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 20,
-  "last_success_at": "2026-08-15T18:51:36+00:00",
-  "episode_path": "docs/episodes/020.md",
-  "title": "회색의 고리",
-  "published_url": "https://novelpia.com/viewer/5969317",
+  "last_success_episode": 21,
+  "last_success_at": "2026-08-16T18:51:03+00:00",
+  "episode_path": "docs/episodes/021.md",
+  "title": "스스로의 단두대",
+  "published_url": "https://novelpia.com/viewer/5972488",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -27,7 +27,8 @@
     17,
     18,
     19,
-    20
+    20,
+    21
   ],
   "unknown_result_episodes": []
 }
