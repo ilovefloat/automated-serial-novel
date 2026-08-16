@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-08-15T18:49:47.511730+00:00",
+  "checked_at": "2026-08-16T18:48:47.873000+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -351,18 +351,6 @@
       "output_token_limit": 65536
     },
     {
-      "name": "gemini-3.7-flash-video-understanding-eap",
-      "display_name": "[Confidential] Gemini 3.7 Flash Video Understanding EAP",
-      "supported_actions": [
-        "generateContent",
-        "countTokens",
-        "createCachedContent",
-        "batchGenerateContent"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 65536
-    },
-    {
       "name": "gemini-embedding-001",
       "display_name": "Gemini Embedding 001",
       "supported_actions": [
@@ -616,7 +604,6 @@
     "gemini-3.5-live-translate-preview",
     "gemini-3.6-flash",
     "gemini-3.7-flash",
-    "gemini-3.7-flash-video-understanding-eap",
     "gemini-embedding-001",
     "gemini-embedding-2",
     "gemini-embedding-2-preview",
@@ -666,7 +653,6 @@
     "gemini-3.5-flash-lite",
     "gemini-3.6-flash",
     "gemini-3.7-flash",
-    "gemini-3.7-flash-video-understanding-eap",
     "gemini-flash-latest",
     "gemini-flash-lite-latest",
     "gemini-omni-flash-preview",
@@ -1034,18 +1020,6 @@
     {
       "name": "gemini-3.7-flash",
       "display_name": "Gemini 3.7 Flash",
-      "supported_actions": [
-        "generateContent",
-        "countTokens",
-        "createCachedContent",
-        "batchGenerateContent"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 65536
-    },
-    {
-      "name": "gemini-3.7-flash-video-understanding-eap",
-      "display_name": "[Confidential] Gemini 3.7 Flash Video Understanding EAP",
       "supported_actions": [
         "generateContent",
         "countTokens",
