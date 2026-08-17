@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 21,
-  "last_success_at": "2026-08-16T18:51:03+00:00",
-  "episode_path": "docs/episodes/021.md",
-  "title": "스스로의 단두대",
-  "published_url": "https://novelpia.com/viewer/5972488",
+  "last_success_episode": 22,
+  "last_success_at": "2026-08-17T19:01:51+00:00",
+  "episode_path": "docs/episodes/022.md",
+  "title": "자기 집행",
+  "published_url": "https://novelpia.com/viewer/5976077",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -28,7 +28,8 @@
     18,
     19,
     20,
-    21
+    21,
+    22
   ],
   "unknown_result_episodes": []
 }
