@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-08-16T18:48:47.873000+00:00",
+  "checked_at": "2026-08-17T18:59:34.226776+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -486,33 +486,6 @@
       "output_token_limit": 32768
     },
     {
-      "name": "imagen-4.0-fast-generate-001",
-      "display_name": "Imagen 4 Fast",
-      "supported_actions": [
-        "predict"
-      ],
-      "input_token_limit": 480,
-      "output_token_limit": 8192
-    },
-    {
-      "name": "imagen-4.0-generate-001",
-      "display_name": "Imagen 4",
-      "supported_actions": [
-        "predict"
-      ],
-      "input_token_limit": 480,
-      "output_token_limit": 8192
-    },
-    {
-      "name": "imagen-4.0-ultra-generate-001",
-      "display_name": "Imagen 4 Ultra",
-      "supported_actions": [
-        "predict"
-      ],
-      "input_token_limit": 480,
-      "output_token_limit": 8192
-    },
-    {
       "name": "lyria-3-clip-preview",
       "display_name": "Lyria 3 Clip Preview",
       "supported_actions": [
@@ -616,9 +589,6 @@
     "gemini-robotics-er-2-streaming-preview",
     "gemma-4-26b-a4b-it",
     "gemma-4-31b-it",
-    "imagen-4.0-fast-generate-001",
-    "imagen-4.0-generate-001",
-    "imagen-4.0-ultra-generate-001",
     "lyria-3-clip-preview",
     "lyria-3-pro-preview",
     "nano-banana-pro-preview",
@@ -1163,33 +1133,6 @@
       ],
       "input_token_limit": 262144,
       "output_token_limit": 32768
-    },
-    {
-      "name": "imagen-4.0-fast-generate-001",
-      "display_name": "Imagen 4 Fast",
-      "supported_actions": [
-        "predict"
-      ],
-      "input_token_limit": 480,
-      "output_token_limit": 8192
-    },
-    {
-      "name": "imagen-4.0-generate-001",
-      "display_name": "Imagen 4",
-      "supported_actions": [
-        "predict"
-      ],
-      "input_token_limit": 480,
-      "output_token_limit": 8192
-    },
-    {
-      "name": "imagen-4.0-ultra-generate-001",
-      "display_name": "Imagen 4 Ultra",
-      "supported_actions": [
-        "predict"
-      ],
-      "input_token_limit": 480,
-      "output_token_limit": 8192
     },
     {
       "name": "lyria-3-clip-preview",
