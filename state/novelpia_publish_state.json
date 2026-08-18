@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 22,
-  "last_success_at": "2026-08-17T19:01:51+00:00",
-  "episode_path": "docs/episodes/022.md",
-  "title": "자기 집행",
-  "published_url": "https://novelpia.com/viewer/5976077",
+  "last_success_episode": 23,
+  "last_success_at": "2026-08-18T19:10:01+00:00",
+  "episode_path": "docs/episodes/023.md",
+  "title": "채권자들의 시간",
+  "published_url": "https://novelpia.com/viewer/5979875",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -29,7 +29,8 @@
     19,
     20,
     21,
-    22
+    22,
+    23
   ],
   "unknown_result_episodes": []
 }
