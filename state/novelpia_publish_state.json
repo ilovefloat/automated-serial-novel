@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 23,
-  "last_success_at": "2026-08-18T19:10:01+00:00",
-  "episode_path": "docs/episodes/023.md",
-  "title": "채권자들의 시간",
-  "published_url": "https://novelpia.com/viewer/5979875",
+  "last_success_episode": 24,
+  "last_success_at": "2026-08-19T19:14:42+00:00",
+  "episode_path": "docs/episodes/024.md",
+  "title": "자기 파괴적 동의",
+  "published_url": "https://novelpia.com/viewer/5983488",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -30,7 +30,8 @@
     20,
     21,
     22,
-    23
+    23,
+    24
   ],
   "unknown_result_episodes": []
 }
