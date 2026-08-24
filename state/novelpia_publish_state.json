@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 26,
-  "last_success_at": "2026-08-22T18:53:24+00:00",
-  "episode_path": "docs/episodes/026.md",
-  "title": "궤도 이탈자들의 버스",
-  "published_url": "https://novelpia.com/viewer/5993103",
+  "last_success_episode": 27,
+  "last_success_at": "2026-08-24T10:26:47+00:00",
+  "episode_path": "docs/episodes/027.md",
+  "title": "공범의 손가락",
+  "published_url": "https://novelpia.com/viewer/5998191",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -33,7 +33,8 @@
     23,
     24,
     25,
-    26
+    26,
+    27
   ],
   "unknown_result_episodes": []
 }
