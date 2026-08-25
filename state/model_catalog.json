@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-08-24T10:23:31.001777+00:00",
+  "checked_at": "2026-08-25T04:04:03.887408+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -636,11 +636,20 @@
     "nano-banana-pro-preview"
   ],
   "probe_succeeded_models": [
-    "gemini-3.5-flash"
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite"
   ],
   "probe_failed_models": [],
-  "generation_failed_models": [],
-  "selected_model": "gemini-3.5-flash",
+  "generation_failed_models": [
+    {
+      "name": "gemini-3.5-flash",
+      "stage": "plan_generation",
+      "status_code": 429,
+      "reason": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. * Quota exceeded for metric: generativelanguage.googleapis.c",
+      "transient": true
+    }
+  ],
+  "selected_model": "gemini-3.5-flash-lite",
   "selection_priority": [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
