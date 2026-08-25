@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 28,
-  "last_success_at": "2026-08-25T04:07:35+00:00",
-  "episode_path": "docs/episodes/028.md",
-  "title": "궤도의 단선",
-  "published_url": "https://novelpia.com/viewer/6000548",
+  "last_success_episode": 29,
+  "last_success_at": "2026-08-25T19:01:40+00:00",
+  "episode_path": "docs/episodes/029.md",
+  "title": "단두대의 파란 불빛",
+  "published_url": "https://novelpia.com/viewer/6003110",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -35,7 +35,8 @@
     25,
     26,
     27,
-    28
+    28,
+    29
   ],
   "unknown_result_episodes": []
 }
