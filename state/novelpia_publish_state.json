@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 27,
-  "last_success_at": "2026-08-24T10:26:47+00:00",
-  "episode_path": "docs/episodes/027.md",
-  "title": "공범의 손가락",
-  "published_url": "https://novelpia.com/viewer/5998191",
+  "last_success_episode": 28,
+  "last_success_at": "2026-08-25T04:07:35+00:00",
+  "episode_path": "docs/episodes/028.md",
+  "title": "궤도의 단선",
+  "published_url": "https://novelpia.com/viewer/6000548",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -34,7 +34,8 @@
     24,
     25,
     26,
-    27
+    27,
+    28
   ],
   "unknown_result_episodes": []
 }
