@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 29,
-  "last_success_at": "2026-08-25T19:01:40+00:00",
-  "episode_path": "docs/episodes/029.md",
-  "title": "단두대의 파란 불빛",
-  "published_url": "https://novelpia.com/viewer/6003110",
+  "last_success_episode": 30,
+  "last_success_at": "2026-08-26T20:06:22+00:00",
+  "episode_path": "docs/episodes/030.md",
+  "title": "지워지는 이름들",
+  "published_url": "https://novelpia.com/viewer/6006332",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -36,7 +36,8 @@
     26,
     27,
     28,
-    29
+    29,
+    30
   ],
   "unknown_result_episodes": []
 }
