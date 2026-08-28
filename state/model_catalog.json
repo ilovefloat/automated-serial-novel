@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-08-26T20:03:48.467032+00:00",
+  "checked_at": "2026-08-28T02:12:07.242942+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -430,6 +430,16 @@
       "output_token_limit": 65536
     },
     {
+      "name": "gemini-omni-1.1-flash",
+      "display_name": "Gemini Omni 1.1 Flash",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 65536
+    },
+    {
       "name": "gemini-omni-flash-preview",
       "display_name": "Gemini Omni Flash Preview",
       "supported_actions": [
@@ -603,6 +613,7 @@
     "gemini-embedding-2-preview",
     "gemini-flash-latest",
     "gemini-flash-lite-latest",
+    "gemini-omni-1.1-flash",
     "gemini-omni-flash-preview",
     "gemini-pro-latest",
     "gemini-robotics-er-1.6-preview",
@@ -647,6 +658,7 @@
     "gemini-3.7-flash",
     "gemini-flash-latest",
     "gemini-flash-lite-latest",
+    "gemini-omni-1.1-flash",
     "gemini-omni-flash-preview",
     "gemini-pro-latest",
     "gemini-robotics-er-1.6-preview",
@@ -1098,6 +1110,16 @@
         "batchGenerateContent"
       ],
       "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-omni-1.1-flash",
+      "display_name": "Gemini Omni 1.1 Flash",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 131072,
       "output_token_limit": 65536
     },
     {
