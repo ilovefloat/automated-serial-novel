@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 31,
-  "last_success_at": "2026-08-28T02:15:00+00:00",
-  "episode_path": "docs/episodes/031.md",
-  "title": "묵시적 동의",
-  "published_url": "https://novelpia.com/viewer/6010011",
+  "last_success_episode": 32,
+  "last_success_at": "2026-08-28T15:30:42+00:00",
+  "episode_path": "docs/episodes/032.md",
+  "title": "삼백 원의 무게",
+  "published_url": "https://novelpia.com/viewer/6012109",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -38,7 +38,8 @@
     28,
     29,
     30,
-    31
+    31,
+    32
   ],
   "unknown_result_episodes": []
 }
