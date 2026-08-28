@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 30,
-  "last_success_at": "2026-08-26T20:06:22+00:00",
-  "episode_path": "docs/episodes/030.md",
-  "title": "지워지는 이름들",
-  "published_url": "https://novelpia.com/viewer/6006332",
+  "last_success_episode": 31,
+  "last_success_at": "2026-08-28T02:15:00+00:00",
+  "episode_path": "docs/episodes/031.md",
+  "title": "묵시적 동의",
+  "published_url": "https://novelpia.com/viewer/6010011",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -37,7 +37,8 @@
     27,
     28,
     29,
-    30
+    30,
+    31
   ],
   "unknown_result_episodes": []
 }
