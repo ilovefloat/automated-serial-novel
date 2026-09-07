@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-08-28T15:28:51.992026+00:00",
+  "checked_at": "2026-09-07T08:26:19.568105+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -370,6 +370,18 @@
       "output_token_limit": 65536
     },
     {
+      "name": "gemini-3.8-flash",
+      "display_name": "Gemini 3.8 Flash",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
       "name": "gemini-embedding-001",
       "display_name": "Gemini Embedding 001",
       "supported_actions": [
@@ -462,18 +474,6 @@
       "output_token_limit": 65536
     },
     {
-      "name": "gemini-robotics-er-1.6-preview",
-      "display_name": "Gemini Robotics-ER 1.6 Preview",
-      "supported_actions": [
-        "generateContent",
-        "countTokens",
-        "createCachedContent",
-        "batchGenerateContent"
-      ],
-      "input_token_limit": 131072,
-      "output_token_limit": 65536
-    },
-    {
       "name": "gemini-robotics-er-2-preview",
       "display_name": "Gemini Robotics-ER 2 Preview",
       "supported_actions": [
@@ -527,6 +527,16 @@
     {
       "name": "lyria-3-pro-preview",
       "display_name": "Lyria 3 Pro Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "lyria-3.5",
+      "display_name": "Lyria 3.5",
       "supported_actions": [
         "generateContent",
         "countTokens"
@@ -608,6 +618,7 @@
     "gemini-3.5-transcribe-live",
     "gemini-3.6-flash",
     "gemini-3.7-flash",
+    "gemini-3.8-flash",
     "gemini-embedding-001",
     "gemini-embedding-2",
     "gemini-embedding-2-preview",
@@ -616,13 +627,13 @@
     "gemini-omni-1.1-flash",
     "gemini-omni-flash-preview",
     "gemini-pro-latest",
-    "gemini-robotics-er-1.6-preview",
     "gemini-robotics-er-2-preview",
     "gemini-robotics-er-2-streaming-preview",
     "gemma-4-26b-a4b-it",
     "gemma-4-31b-it",
     "lyria-3-clip-preview",
     "lyria-3-pro-preview",
+    "lyria-3.5",
     "nano-banana-pro-preview",
     "veo-3.1-fast-generate-preview",
     "veo-3.1-generate-preview",
@@ -656,17 +667,18 @@
     "gemini-3.5-transcribe",
     "gemini-3.6-flash",
     "gemini-3.7-flash",
+    "gemini-3.8-flash",
     "gemini-flash-latest",
     "gemini-flash-lite-latest",
     "gemini-omni-1.1-flash",
     "gemini-omni-flash-preview",
     "gemini-pro-latest",
-    "gemini-robotics-er-1.6-preview",
     "gemini-robotics-er-2-preview",
     "gemma-4-26b-a4b-it",
     "gemma-4-31b-it",
     "lyria-3-clip-preview",
     "lyria-3-pro-preview",
+    "lyria-3.5",
     "nano-banana-pro-preview"
   ],
   "probe_succeeded_models": [
@@ -1053,6 +1065,18 @@
       "output_token_limit": 65536
     },
     {
+      "name": "gemini-3.8-flash",
+      "display_name": "Gemini 3.8 Flash",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "createCachedContent",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
       "name": "gemini-embedding-001",
       "display_name": "Gemini Embedding 001",
       "supported_actions": [
@@ -1145,18 +1169,6 @@
       "output_token_limit": 65536
     },
     {
-      "name": "gemini-robotics-er-1.6-preview",
-      "display_name": "Gemini Robotics-ER 1.6 Preview",
-      "supported_actions": [
-        "generateContent",
-        "countTokens",
-        "createCachedContent",
-        "batchGenerateContent"
-      ],
-      "input_token_limit": 131072,
-      "output_token_limit": 65536
-    },
-    {
       "name": "gemini-robotics-er-2-preview",
       "display_name": "Gemini Robotics-ER 2 Preview",
       "supported_actions": [
@@ -1210,6 +1222,16 @@
     {
       "name": "lyria-3-pro-preview",
       "display_name": "Lyria 3 Pro Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "lyria-3.5",
+      "display_name": "Lyria 3.5",
       "supported_actions": [
         "generateContent",
         "countTokens"
