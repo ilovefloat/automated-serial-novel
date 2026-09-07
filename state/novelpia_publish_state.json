@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 32,
-  "last_success_at": "2026-08-28T15:30:42+00:00",
-  "episode_path": "docs/episodes/032.md",
-  "title": "삼백 원의 무게",
-  "published_url": "https://novelpia.com/viewer/6012109",
+  "last_success_episode": 33,
+  "last_success_at": "2026-09-07T08:28:58+00:00",
+  "episode_path": "docs/episodes/033.md",
+  "title": "낙인의 시간",
+  "published_url": "https://novelpia.com/viewer/6043021",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -39,7 +39,8 @@
     29,
     30,
     31,
-    32
+    32,
+    33
   ],
   "unknown_result_episodes": []
 }
