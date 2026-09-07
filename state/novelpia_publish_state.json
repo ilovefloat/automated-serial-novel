@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 33,
-  "last_success_at": "2026-09-07T08:28:58+00:00",
-  "episode_path": "docs/episodes/033.md",
-  "title": "낙인의 시간",
-  "published_url": "https://novelpia.com/viewer/6043021",
+  "last_success_episode": 34,
+  "last_success_at": "2026-09-07T15:26:52+00:00",
+  "episode_path": "docs/episodes/034.md",
+  "title": "심판의 지문",
+  "published_url": "https://novelpia.com/viewer/6044662",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -40,7 +40,8 @@
     30,
     31,
     32,
-    33
+    33,
+    34
   ],
   "unknown_result_episodes": []
 }
