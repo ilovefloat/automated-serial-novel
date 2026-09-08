@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 34,
-  "last_success_at": "2026-09-07T15:26:52+00:00",
-  "episode_path": "docs/episodes/034.md",
-  "title": "심판의 지문",
-  "published_url": "https://novelpia.com/viewer/6044662",
+  "last_success_episode": 35,
+  "last_success_at": "2026-09-08T21:13:42+00:00",
+  "episode_path": "docs/episodes/035.md",
+  "title": "기왕증의 역사",
+  "published_url": "https://novelpia.com/viewer/6048241",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -41,7 +41,8 @@
     31,
     32,
     33,
-    34
+    34,
+    35
   ],
   "unknown_result_episodes": []
 }
