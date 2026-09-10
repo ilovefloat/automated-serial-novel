@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 35,
-  "last_success_at": "2026-09-08T21:13:42+00:00",
-  "episode_path": "docs/episodes/035.md",
-  "title": "기왕증의 역사",
-  "published_url": "https://novelpia.com/viewer/6048241",
+  "last_success_episode": 36,
+  "last_success_at": "2026-09-10T08:18:22+00:00",
+  "episode_path": "docs/episodes/036.md",
+  "title": "배신의 값",
+  "published_url": "https://novelpia.com/viewer/6052386",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -42,7 +42,8 @@
     32,
     33,
     34,
-    35
+    35,
+    36
   ],
   "unknown_result_episodes": []
 }
