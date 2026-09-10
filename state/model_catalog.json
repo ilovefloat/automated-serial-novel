@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-09-08T21:11:53.077787+00:00",
+  "checked_at": "2026-09-10T08:13:47.814089+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -545,6 +545,15 @@
       "output_token_limit": 65536
     },
     {
+      "name": "lyria-realtime-exp",
+      "display_name": "Lyria Realtime Experimental",
+      "supported_actions": [
+        "bidiGenerateMusic"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
       "name": "nano-banana-pro-preview",
       "display_name": "Nano Banana Pro",
       "supported_actions": [
@@ -634,6 +643,7 @@
     "lyria-3-clip-preview",
     "lyria-3-pro-preview",
     "lyria-3.5",
+    "lyria-realtime-exp",
     "nano-banana-pro-preview",
     "veo-3.1-fast-generate-preview",
     "veo-3.1-generate-preview",
@@ -682,11 +692,36 @@
     "nano-banana-pro-preview"
   ],
   "probe_succeeded_models": [
-    "gemini-3.5-flash"
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-flash-latest"
   ],
   "probe_failed_models": [],
-  "generation_failed_models": [],
-  "selected_model": "gemini-3.5-flash",
+  "generation_failed_models": [
+    {
+      "name": "gemini-3.5-flash",
+      "stage": "body_generation",
+      "status_code": "UNKNOWN",
+      "reason": "제목에는 에피소드 번호를 포함하지 마십시오.",
+      "transient": false
+    },
+    {
+      "name": "gemini-3.5-flash-lite",
+      "stage": "body_generation",
+      "status_code": "UNKNOWN",
+      "reason": "본문이 계획과 실질적으로 무관합니다: 계획의 필수 인물이 한 명도 본문에 등장하지 않음",
+      "transient": false
+    },
+    {
+      "name": "gemini-3.1-flash-lite",
+      "stage": "body_generation",
+      "status_code": "UNKNOWN",
+      "reason": "본문이 계획과 실질적으로 무관합니다: 계획의 필수 인물이 한 명도 본문에 등장하지 않음",
+      "transient": false
+    }
+  ],
+  "selected_model": "gemini-flash-latest",
   "selection_priority": [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
@@ -1235,6 +1270,15 @@
       "supported_actions": [
         "generateContent",
         "countTokens"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "lyria-realtime-exp",
+      "display_name": "Lyria Realtime Experimental",
+      "supported_actions": [
+        "bidiGenerateMusic"
       ],
       "input_token_limit": 1048576,
       "output_token_limit": 65536
