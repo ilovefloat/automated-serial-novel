@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 37,
-  "last_success_at": "2026-09-11T00:36:02+00:00",
-  "episode_path": "docs/episodes/037.md",
-  "title": "이수 완료의 증명",
-  "published_url": "https://novelpia.com/viewer/6054534",
+  "last_success_episode": 38,
+  "last_success_at": "2026-09-11T21:02:28+00:00",
+  "episode_path": "docs/episodes/038.md",
+  "title": "가상의 교실",
+  "published_url": "https://novelpia.com/viewer/6057715",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -44,7 +44,8 @@
     34,
     35,
     36,
-    37
+    37,
+    38
   ],
   "unknown_result_episodes": []
 }
