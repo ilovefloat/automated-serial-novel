@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 36,
-  "last_success_at": "2026-09-10T08:18:22+00:00",
-  "episode_path": "docs/episodes/036.md",
-  "title": "배신의 값",
-  "published_url": "https://novelpia.com/viewer/6052386",
+  "last_success_episode": 37,
+  "last_success_at": "2026-09-11T00:36:02+00:00",
+  "episode_path": "docs/episodes/037.md",
+  "title": "이수 완료의 증명",
+  "published_url": "https://novelpia.com/viewer/6054534",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -43,7 +43,8 @@
     33,
     34,
     35,
-    36
+    36,
+    37
   ],
   "unknown_result_episodes": []
 }
