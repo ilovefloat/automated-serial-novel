@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 38,
-  "last_success_at": "2026-09-11T21:02:28+00:00",
-  "episode_path": "docs/episodes/038.md",
-  "title": "가상의 교실",
-  "published_url": "https://novelpia.com/viewer/6057715",
+  "last_success_episode": 39,
+  "last_success_at": "2026-09-12T20:38:50+00:00",
+  "episode_path": "docs/episodes/039.md",
+  "title": "올가미의 역설",
+  "published_url": "https://novelpia.com/viewer/6060926",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -45,7 +45,8 @@
     35,
     36,
     37,
-    38
+    38,
+    39
   ],
   "unknown_result_episodes": []
 }
