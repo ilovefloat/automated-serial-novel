@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 39,
-  "last_success_at": "2026-09-12T20:38:50+00:00",
-  "episode_path": "docs/episodes/039.md",
-  "title": "올가미의 역설",
-  "published_url": "https://novelpia.com/viewer/6060926",
+  "last_success_episode": 40,
+  "last_success_at": "2026-09-13T20:55:35+00:00",
+  "episode_path": "docs/episodes/040.md",
+  "title": "매핑된 얼굴",
+  "published_url": "https://novelpia.com/viewer/6064122",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -46,7 +46,8 @@
     36,
     37,
     38,
-    39
+    39,
+    40
   ],
   "unknown_result_episodes": []
 }
