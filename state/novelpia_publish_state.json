@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 40,
-  "last_success_at": "2026-09-13T20:55:35+00:00",
-  "episode_path": "docs/episodes/040.md",
-  "title": "매핑된 얼굴",
-  "published_url": "https://novelpia.com/viewer/6064122",
+  "last_success_episode": 41,
+  "last_success_at": "2026-09-14T16:03:43+00:00",
+  "episode_path": "docs/episodes/041.md",
+  "title": "붉은 픽셀의 결제",
+  "published_url": "https://novelpia.com/viewer/6066996",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -47,7 +47,8 @@
     37,
     38,
     39,
-    40
+    40,
+    41
   ],
   "unknown_result_episodes": []
 }
