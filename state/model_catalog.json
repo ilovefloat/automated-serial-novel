@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-09-13T20:53:17.918060+00:00",
+  "checked_at": "2026-09-14T16:01:00.130865+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -8,7 +8,17 @@
         "generateContent",
         "countTokens"
       ],
-      "input_token_limit": 131072,
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "antigravity-preview-09-2026",
+      "display_name": "Antigravity Agent Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 1048576,
       "output_token_limit": 65536
     },
     {
@@ -594,6 +604,7 @@
   ],
   "listed_models": [
     "antigravity-preview-05-2026",
+    "antigravity-preview-09-2026",
     "aqa",
     "deep-research-max-preview-04-2026",
     "deep-research-preview-04-2026",
@@ -651,6 +662,7 @@
   ],
   "generate_content_models": [
     "antigravity-preview-05-2026",
+    "antigravity-preview-09-2026",
     "deep-research-max-preview-04-2026",
     "deep-research-preview-04-2026",
     "deep-research-pro-preview-12-2025",
@@ -692,11 +704,20 @@
     "nano-banana-pro-preview"
   ],
   "probe_succeeded_models": [
-    "gemini-3.5-flash"
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite"
   ],
   "probe_failed_models": [],
-  "generation_failed_models": [],
-  "selected_model": "gemini-3.5-flash",
+  "generation_failed_models": [
+    {
+      "name": "gemini-3.5-flash",
+      "stage": "body_generation",
+      "status_code": 503,
+      "reason": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+      "transient": true
+    }
+  ],
+  "selected_model": "gemini-3.5-flash-lite",
   "selection_priority": [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
@@ -713,7 +734,17 @@
         "generateContent",
         "countTokens"
       ],
-      "input_token_limit": 131072,
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "antigravity-preview-09-2026",
+      "display_name": "Antigravity Agent Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 1048576,
       "output_token_limit": 65536
     },
     {

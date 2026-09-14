@@ -240,6 +240,12 @@
       "title": "매핑된 얼굴",
       "date": "2026-09-13",
       "file": "episodes/040.md"
+    },
+    {
+      "episode": 41,
+      "title": "붉은 픽셀의 결제",
+      "date": "2026-09-14",
+      "file": "episodes/041.md"
     }
   ]
 }
