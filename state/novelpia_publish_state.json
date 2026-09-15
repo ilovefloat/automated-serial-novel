@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 41,
-  "last_success_at": "2026-09-14T16:03:43+00:00",
-  "episode_path": "docs/episodes/041.md",
-  "title": "붉은 픽셀의 결제",
-  "published_url": "https://novelpia.com/viewer/6066996",
+  "last_success_episode": 42,
+  "last_success_at": "2026-09-15T21:27:21+00:00",
+  "episode_path": "docs/episodes/042.md",
+  "title": "붉은 연쇄",
+  "published_url": "https://novelpia.com/viewer/6070680",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -48,7 +48,8 @@
     38,
     39,
     40,
-    41
+    41,
+    42
   ],
   "unknown_result_episodes": []
 }
