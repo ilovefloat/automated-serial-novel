@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 42,
-  "last_success_at": "2026-09-15T21:27:21+00:00",
-  "episode_path": "docs/episodes/042.md",
-  "title": "붉은 연쇄",
-  "published_url": "https://novelpia.com/viewer/6070680",
+  "last_success_episode": 43,
+  "last_success_at": "2026-09-16T21:26:44+00:00",
+  "episode_path": "docs/episodes/043.md",
+  "title": "연쇄의 매듭",
+  "published_url": "https://novelpia.com/viewer/6073667",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -49,7 +49,8 @@
     39,
     40,
     41,
-    42
+    42,
+    43
   ],
   "unknown_result_episodes": []
 }
