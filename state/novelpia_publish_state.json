@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 43,
-  "last_success_at": "2026-09-16T21:26:44+00:00",
-  "episode_path": "docs/episodes/043.md",
-  "title": "연쇄의 매듭",
-  "published_url": "https://novelpia.com/viewer/6073667",
+  "last_success_episode": 44,
+  "last_success_at": "2026-09-17T21:28:42+00:00",
+  "episode_path": "docs/episodes/044.md",
+  "title": "잿빛 교차로의 묵시록",
+  "published_url": "https://novelpia.com/viewer/6076708",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -50,7 +50,8 @@
     40,
     41,
     42,
-    43
+    43,
+    44
   ],
   "unknown_result_episodes": []
 }
