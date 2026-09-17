@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-09-16T21:21:44.417352+00:00",
+  "checked_at": "2026-09-17T21:25:17.726320+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -724,11 +724,20 @@
     "nano-banana-pro-preview"
   ],
   "probe_succeeded_models": [
-    "gemini-3.5-flash"
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite"
   ],
   "probe_failed_models": [],
-  "generation_failed_models": [],
-  "selected_model": "gemini-3.5-flash",
+  "generation_failed_models": [
+    {
+      "name": "gemini-3.5-flash",
+      "stage": "body_generation",
+      "status_code": "UNKNOWN",
+      "reason": "본문이 계획과 실질적으로 무관합니다: 계획의 필수 인물이 한 명도 본문에 등장하지 않음",
+      "transient": false
+    }
+  ],
+  "selected_model": "gemini-3.5-flash-lite",
   "selection_priority": [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
