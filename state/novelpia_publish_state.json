@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 45,
-  "last_success_at": "2026-09-19T00:40:57+00:00",
-  "episode_path": "docs/episodes/045.md",
-  "title": "원상복구",
-  "published_url": "https://novelpia.com/viewer/6079962",
+  "last_success_episode": 46,
+  "last_success_at": "2026-09-19T20:47:31+00:00",
+  "episode_path": "docs/episodes/046.md",
+  "title": "간접강제",
+  "published_url": "https://novelpia.com/viewer/6082561",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -52,7 +52,8 @@
     42,
     43,
     44,
-    45
+    45,
+    46
   ],
   "unknown_result_episodes": []
 }
