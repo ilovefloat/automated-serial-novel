@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 44,
-  "last_success_at": "2026-09-17T21:28:42+00:00",
-  "episode_path": "docs/episodes/044.md",
-  "title": "잿빛 교차로의 묵시록",
-  "published_url": "https://novelpia.com/viewer/6076708",
+  "last_success_episode": 45,
+  "last_success_at": "2026-09-19T00:40:57+00:00",
+  "episode_path": "docs/episodes/045.md",
+  "title": "원상복구",
+  "published_url": "https://novelpia.com/viewer/6079962",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -51,7 +51,8 @@
     41,
     42,
     43,
-    44
+    44,
+    45
   ],
   "unknown_result_episodes": []
 }
