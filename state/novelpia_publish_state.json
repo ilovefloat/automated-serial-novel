@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 46,
-  "last_success_at": "2026-09-19T20:47:31+00:00",
-  "episode_path": "docs/episodes/046.md",
+  "last_success_episode": 47,
+  "last_success_at": "2026-09-20T20:53:53+00:00",
+  "episode_path": "docs/episodes/047.md",
   "title": "간접강제",
-  "published_url": "https://novelpia.com/viewer/6082561",
+  "published_url": "https://novelpia.com/viewer/6085637",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -53,7 +53,8 @@
     43,
     44,
     45,
-    46
+    46,
+    47
   ],
   "unknown_result_episodes": []
 }
