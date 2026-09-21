@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 47,
-  "last_success_at": "2026-09-20T20:53:53+00:00",
-  "episode_path": "docs/episodes/047.md",
-  "title": "간접강제",
-  "published_url": "https://novelpia.com/viewer/6085637",
+  "last_success_episode": 48,
+  "last_success_at": "2026-09-21T16:10:19+00:00",
+  "episode_path": "docs/episodes/048.md",
+  "title": "자승자박",
+  "published_url": "https://novelpia.com/viewer/6088454",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -54,7 +54,8 @@
     44,
     45,
     46,
-    47
+    47,
+    48
   ],
   "unknown_result_episodes": []
 }
