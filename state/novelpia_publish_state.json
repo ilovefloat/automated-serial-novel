@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 48,
-  "last_success_at": "2026-09-21T16:10:19+00:00",
-  "episode_path": "docs/episodes/048.md",
-  "title": "자승자박",
-  "published_url": "https://novelpia.com/viewer/6088454",
+  "last_success_episode": 49,
+  "last_success_at": "2026-09-22T21:32:05+00:00",
+  "episode_path": "docs/episodes/049.md",
+  "title": "해킹의 조건",
+  "published_url": "https://novelpia.com/viewer/6091756",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -55,7 +55,8 @@
     45,
     46,
     47,
-    48
+    48,
+    49
   ],
   "unknown_result_episodes": []
 }
