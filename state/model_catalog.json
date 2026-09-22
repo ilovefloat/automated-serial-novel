@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-09-21T16:02:24.835671+00:00",
+  "checked_at": "2026-09-22T21:21:58.372809+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -14,6 +14,16 @@
     {
       "name": "antigravity-preview-09-2026",
       "display_name": "Antigravity Agent Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "antigravity-preview-latest",
+      "display_name": "Antigravity Agent Preview Latest",
       "supported_actions": [
         "generateContent",
         "countTokens"
@@ -623,6 +633,7 @@
   "listed_models": [
     "antigravity-preview-05-2026",
     "antigravity-preview-09-2026",
+    "antigravity-preview-latest",
     "aqa",
     "deep-research-max-preview-04-2026",
     "deep-research-preview-04-2026",
@@ -683,6 +694,7 @@
   "generate_content_models": [
     "antigravity-preview-05-2026",
     "antigravity-preview-09-2026",
+    "antigravity-preview-latest",
     "deep-research-max-preview-04-2026",
     "deep-research-preview-04-2026",
     "deep-research-pro-preview-12-2025",
@@ -724,11 +736,28 @@
     "nano-banana-pro-preview"
   ],
   "probe_succeeded_models": [
-    "gemini-3.5-flash"
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite"
   ],
   "probe_failed_models": [],
-  "generation_failed_models": [],
-  "selected_model": "gemini-3.5-flash",
+  "generation_failed_models": [
+    {
+      "name": "gemini-3.5-flash",
+      "stage": "body_generation",
+      "status_code": "UNKNOWN",
+      "reason": "본문이 계획과 실질적으로 무관합니다: 계획의 필수 인물이 한 명도 본문에 등장하지 않음",
+      "transient": false
+    },
+    {
+      "name": "gemini-3.5-flash-lite",
+      "stage": "body_generation",
+      "status_code": "UNKNOWN",
+      "reason": "본문이 계획과 실질적으로 무관합니다: 계획의 필수 인물이 한 명도 본문에 등장하지 않음; unfinished scene 필수 즉각 행동 누락: ['줄어드는 타이머 앞에서 태수가 액정을 쥔 채 느끼는 물리적 한계와 대안 탐색 행동 서술']",
+      "transient": false
+    }
+  ],
+  "selected_model": "gemini-3.1-flash-lite",
   "selection_priority": [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
@@ -751,6 +780,16 @@
     {
       "name": "antigravity-preview-09-2026",
       "display_name": "Antigravity Agent Preview",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "antigravity-preview-latest",
+      "display_name": "Antigravity Agent Preview Latest",
       "supported_actions": [
         "generateContent",
         "countTokens"
