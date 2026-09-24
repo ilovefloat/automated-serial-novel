@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-09-22T21:21:58.372809+00:00",
+  "checked_at": "2026-09-24T00:53:51.812881+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -402,6 +402,28 @@
       "output_token_limit": 65536
     },
     {
+      "name": "gemini-3.8-flash-lite-tts",
+      "display_name": "Gemini 3.8 Flash Lite TTS",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 8192,
+      "output_token_limit": 16384
+    },
+    {
+      "name": "gemini-3.8-flash-tts",
+      "display_name": "Gemini 3.8 Flash TTS",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 8192,
+      "output_token_limit": 16384
+    },
+    {
       "name": "gemini-3.8-live",
       "display_name": "Gemini 3.8 Live",
       "supported_actions": [
@@ -668,6 +690,8 @@
     "gemini-3.6-flash",
     "gemini-3.7-flash",
     "gemini-3.8-flash",
+    "gemini-3.8-flash-lite-tts",
+    "gemini-3.8-flash-tts",
     "gemini-3.8-live",
     "gemini-3.8-live-extended-thinking",
     "gemini-embedding-001",
@@ -722,6 +746,8 @@
     "gemini-3.6-flash",
     "gemini-3.7-flash",
     "gemini-3.8-flash",
+    "gemini-3.8-flash-lite-tts",
+    "gemini-3.8-flash-tts",
     "gemini-flash-latest",
     "gemini-flash-lite-latest",
     "gemini-omni-1.1-flash",
@@ -753,7 +779,7 @@
       "name": "gemini-3.5-flash-lite",
       "stage": "body_generation",
       "status_code": "UNKNOWN",
-      "reason": "본문이 계획과 실질적으로 무관합니다: 계획의 필수 인물이 한 명도 본문에 등장하지 않음; unfinished scene 필수 즉각 행동 누락: ['줄어드는 타이머 앞에서 태수가 액정을 쥔 채 느끼는 물리적 한계와 대안 탐색 행동 서술']",
+      "reason": "본문이 계획과 실질적으로 무관합니다: 계획의 필수 인물이 한 명도 본문에 등장하지 않음",
       "transient": false
     }
   ],
@@ -1166,6 +1192,28 @@
       ],
       "input_token_limit": 1048576,
       "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-3.8-flash-lite-tts",
+      "display_name": "Gemini 3.8 Flash Lite TTS",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 8192,
+      "output_token_limit": 16384
+    },
+    {
+      "name": "gemini-3.8-flash-tts",
+      "display_name": "Gemini 3.8 Flash TTS",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 8192,
+      "output_token_limit": 16384
     },
     {
       "name": "gemini-3.8-live",
