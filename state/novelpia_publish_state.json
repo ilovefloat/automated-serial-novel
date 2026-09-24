@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 50,
-  "last_success_at": "2026-09-24T01:00:12+00:00",
-  "episode_path": "docs/episodes/050.md",
-  "title": "감옥의 지도",
-  "published_url": "https://novelpia.com/viewer/6094968",
+  "last_success_episode": 51,
+  "last_success_at": "2026-09-24T21:36:02+00:00",
+  "episode_path": "docs/episodes/051.md",
+  "title": "붉은 픽셀의 경계",
+  "published_url": "https://novelpia.com/viewer/6097433",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -57,7 +57,8 @@
     47,
     48,
     49,
-    50
+    50,
+    51
   ],
   "unknown_result_episodes": []
 }
