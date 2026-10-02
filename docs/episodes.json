@@ -318,6 +318,12 @@
       "title": "종착역의 온도",
       "date": "2026-09-26",
       "file": "episodes/053.md"
+    },
+    {
+      "episode": 54,
+      "title": "꺼진 액정의 무게",
+      "date": "2026-10-02",
+      "file": "episodes/054.md"
     }
   ]
 }

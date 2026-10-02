@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-09-26T21:13:08.695332+00:00",
+  "checked_at": "2026-10-02T01:49:33.785546+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -770,17 +770,24 @@
   "generation_failed_models": [
     {
       "name": "gemini-3.5-flash",
-      "stage": "body_generation",
-      "status_code": "UNKNOWN",
-      "reason": "본문이 계획과 실질적으로 무관합니다: 계획의 필수 인물이 한 명도 본문에 등장하지 않음",
-      "transient": false
+      "stage": "plan_generation",
+      "status_code": 429,
+      "reason": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. * Quota exceeded for metric: generativelanguage.googleapis.c",
+      "transient": true
     },
     {
       "name": "gemini-3.5-flash-lite",
       "stage": "body_generation",
       "status_code": "UNKNOWN",
-      "reason": "본문이 계획과 실질적으로 무관합니다: 계획의 필수 인물이 한 명도 본문에 등장하지 않음",
+      "reason": "본문이 계획과 실질적으로 무관합니다: 계획의 필수 인물이 한 명도 본문에 등장하지 않음; unfinished scene 필수 즉각 행동 누락: ['터미널 밖으로 나간 태수의 처절한 노숙 묘사', '주변을 배회하며 대안을 찾는 시도']",
       "transient": false
+    },
+    {
+      "name": "gemini-3.5-flash",
+      "stage": "body_generation",
+      "status_code": 429,
+      "reason": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. * Quota exceeded for metric: generativelanguage.googleapis.c",
+      "transient": true
     }
   ],
   "selected_model": "gemini-3.1-flash-lite",
