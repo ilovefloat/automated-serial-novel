@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 55,
-  "last_success_at": "2026-10-03T14:28:56+00:00",
-  "episode_path": "docs/episodes/055.md",
-  "title": "밖으로 밀려난 아침",
-  "published_url": "https://novelpia.com/viewer/6135059",
+  "last_success_episode": 56,
+  "last_success_at": "2026-10-04T02:03:43+00:00",
+  "episode_path": "docs/episodes/056.md",
+  "title": "한파 경보",
+  "published_url": "https://novelpia.com/viewer/6136669",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -62,7 +62,8 @@
     52,
     53,
     54,
-    55
+    55,
+    56
   ],
   "unknown_result_episodes": []
 }
