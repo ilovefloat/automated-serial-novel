@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 56,
-  "last_success_at": "2026-10-04T02:03:43+00:00",
-  "episode_path": "docs/episodes/056.md",
-  "title": "한파 경보",
-  "published_url": "https://novelpia.com/viewer/6136669",
+  "last_success_episode": 57,
+  "last_success_at": "2026-10-04T21:33:48+00:00",
+  "episode_path": "docs/episodes/057.md",
+  "title": "온기의 값",
+  "published_url": "https://novelpia.com/viewer/6141459",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -63,7 +63,8 @@
     53,
     54,
     55,
-    56
+    56,
+    57
   ],
   "unknown_result_episodes": []
 }
