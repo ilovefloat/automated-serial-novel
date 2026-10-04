@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-03T14:26:17.816541+00:00",
+  "checked_at": "2026-10-04T01:59:50.299037+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -771,7 +771,7 @@
       "name": "gemini-3.5-flash",
       "stage": "body_generation",
       "status_code": "UNKNOWN",
-      "reason": "본문이 계획과 실질적으로 무관합니다: 계획의 필수 인물이 한 명도 본문에 등장하지 않음; unfinished scene 필수 즉각 행동 누락: ['터미널 주변을 배회하며 노숙 장소를 찾는 시도']",
+      "reason": "본문이 계획과 실질적으로 무관합니다: 계획의 필수 인물이 한 명도 본문에 등장하지 않음; unfinished scene 필수 즉각 행동 누락: ['새벽 도로를 걸으며 추위를 피할 임시 은신처를 찾는 시도']",
       "transient": false
     }
   ],
