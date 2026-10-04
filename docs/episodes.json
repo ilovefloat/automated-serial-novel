@@ -336,6 +336,12 @@
       "title": "한파 경보",
       "date": "2026-10-04",
       "file": "episodes/056.md"
+    },
+    {
+      "episode": 57,
+      "title": "온기의 값",
+      "date": "2026-10-04",
+      "file": "episodes/057.md"
     }
   ]
 }
