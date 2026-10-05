@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 57,
-  "last_success_at": "2026-10-04T21:33:48+00:00",
-  "episode_path": "docs/episodes/057.md",
-  "title": "온기의 값",
-  "published_url": "https://novelpia.com/viewer/6141459",
+  "last_success_episode": 58,
+  "last_success_at": "2026-10-05T18:54:14+00:00",
+  "episode_path": "docs/episodes/058.md",
+  "title": "체온 이하의 문장",
+  "published_url": "https://novelpia.com/viewer/6146897",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -64,7 +64,8 @@
     54,
     55,
     56,
-    57
+    57,
+    58
   ],
   "unknown_result_episodes": []
 }
