@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-04T21:30:38.871797+00:00",
+  "checked_at": "2026-10-05T18:52:19.955640+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -762,20 +762,11 @@
     "nano-banana-pro-preview"
   ],
   "probe_succeeded_models": [
-    "gemini-3.5-flash",
-    "gemini-3.5-flash-lite"
+    "gemini-3.5-flash"
   ],
   "probe_failed_models": [],
-  "generation_failed_models": [
-    {
-      "name": "gemini-3.5-flash",
-      "stage": "body_generation",
-      "status_code": "UNKNOWN",
-      "reason": "본문이 계획과 실질적으로 무관합니다: 계획의 필수 인물이 한 명도 본문에 등장하지 않음; unfinished scene 필수 즉각 행동 누락: ['새벽 도로를 걸으며 추위를 피할 임시 은신처를 찾는 시도']",
-      "transient": false
-    }
-  ],
-  "selected_model": "gemini-3.5-flash-lite",
+  "generation_failed_models": [],
+  "selected_model": "gemini-3.5-flash",
   "selection_priority": [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
