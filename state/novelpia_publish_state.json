@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 58,
-  "last_success_at": "2026-10-05T18:54:14+00:00",
-  "episode_path": "docs/episodes/058.md",
-  "title": "체온 이하의 문장",
-  "published_url": "https://novelpia.com/viewer/6146897",
+  "last_success_episode": 59,
+  "last_success_at": "2026-10-06T16:19:48+00:00",
+  "episode_path": "docs/episodes/059.md",
+  "title": "뼈마디의 서명",
+  "published_url": "https://novelpia.com/viewer/6151912",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -65,7 +65,8 @@
     55,
     56,
     57,
-    58
+    58,
+    59
   ],
   "unknown_result_episodes": []
 }
