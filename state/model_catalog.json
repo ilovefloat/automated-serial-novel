@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-05T18:52:19.955640+00:00",
+  "checked_at": "2026-10-06T16:18:17.512094+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -502,6 +502,17 @@
       "output_token_limit": 65536
     },
     {
+      "name": "gemini-nano-banana-2.1",
+      "display_name": "Nano Banana 2.1",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 65536,
+      "output_token_limit": 65536
+    },
+    {
       "name": "gemini-omni-1.1-flash",
       "display_name": "Gemini Omni 1.1 Flash",
       "supported_actions": [
@@ -699,6 +710,7 @@
     "gemini-embedding-2-preview",
     "gemini-flash-latest",
     "gemini-flash-lite-latest",
+    "gemini-nano-banana-2.1",
     "gemini-omni-1.1-flash",
     "gemini-omni-flash-preview",
     "gemini-pro-latest",
@@ -750,6 +762,7 @@
     "gemini-3.8-flash-tts",
     "gemini-flash-latest",
     "gemini-flash-lite-latest",
+    "gemini-nano-banana-2.1",
     "gemini-omni-1.1-flash",
     "gemini-omni-flash-preview",
     "gemini-pro-latest",
@@ -762,11 +775,18 @@
     "nano-banana-pro-preview"
   ],
   "probe_succeeded_models": [
-    "gemini-3.5-flash"
+    "gemini-3.5-flash-lite"
   ],
-  "probe_failed_models": [],
+  "probe_failed_models": [
+    {
+      "name": "gemini-3.5-flash",
+      "status_code": 503,
+      "reason": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+      "transient": true
+    }
+  ],
   "generation_failed_models": [],
-  "selected_model": "gemini-3.5-flash",
+  "selected_model": "gemini-3.5-flash-lite",
   "selection_priority": [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
@@ -1274,6 +1294,17 @@
         "batchGenerateContent"
       ],
       "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-nano-banana-2.1",
+      "display_name": "Nano Banana 2.1",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 65536,
       "output_token_limit": 65536
     },
     {
