@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 60,
-  "last_success_at": "2026-10-07T23:16:28+00:00",
-  "episode_path": "docs/episodes/060.md",
-  "title": "보이지 않는 벽",
-  "published_url": "https://novelpia.com/viewer/6157812",
+  "last_success_episode": 61,
+  "last_success_at": "2026-10-08T17:01:06+00:00",
+  "episode_path": "docs/episodes/061.md",
+  "title": "사각지대의 온기",
+  "published_url": "https://novelpia.com/viewer/6162337",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -67,7 +67,8 @@
     57,
     58,
     59,
-    60
+    60,
+    61
   ],
   "unknown_result_episodes": []
 }
