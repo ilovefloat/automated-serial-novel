@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 62,
-  "last_success_at": "2026-10-09T16:40:21+00:00",
-  "episode_path": "docs/episodes/062.md",
-  "title": "사각지대의 아침",
-  "published_url": "https://novelpia.com/viewer/6167421",
+  "last_success_episode": 63,
+  "last_success_at": "2026-10-10T15:36:54+00:00",
+  "episode_path": "docs/episodes/063.md",
+  "title": "유령의 숨소리",
+  "published_url": "https://novelpia.com/viewer/6171867",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -69,7 +69,8 @@
     59,
     60,
     61,
-    62
+    62,
+    63
   ],
   "unknown_result_episodes": []
 }
