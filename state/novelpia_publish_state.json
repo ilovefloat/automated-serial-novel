@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 63,
-  "last_success_at": "2026-10-10T15:36:54+00:00",
-  "episode_path": "docs/episodes/063.md",
-  "title": "유령의 숨소리",
-  "published_url": "https://novelpia.com/viewer/6171867",
+  "last_success_episode": 64,
+  "last_success_at": "2026-10-11T16:01:46+00:00",
+  "episode_path": "docs/episodes/064.md",
+  "title": "틈새의 깊이",
+  "published_url": "https://novelpia.com/viewer/6177202",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -70,7 +70,8 @@
     60,
     61,
     62,
-    63
+    63,
+    64
   ],
   "unknown_result_episodes": []
 }
