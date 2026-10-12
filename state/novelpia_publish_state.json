@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 64,
-  "last_success_at": "2026-10-11T16:01:46+00:00",
-  "episode_path": "docs/episodes/064.md",
-  "title": "틈새의 깊이",
-  "published_url": "https://novelpia.com/viewer/6177202",
+  "last_success_episode": 65,
+  "last_success_at": "2026-10-12T19:25:14+00:00",
+  "episode_path": "docs/episodes/065.md",
+  "title": "배수구의 틈",
+  "published_url": "https://novelpia.com/viewer/6182667",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -71,7 +71,8 @@
     61,
     62,
     63,
-    64
+    64,
+    65
   ],
   "unknown_result_episodes": []
 }
