@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 67,
-  "last_success_at": "2026-10-14T21:45:21+00:00",
-  "episode_path": "docs/episodes/067.md",
-  "title": "잿빛 거리의 보행",
-  "published_url": "https://novelpia.com/viewer/6192419",
+  "last_success_episode": 68,
+  "last_success_at": "2026-10-15T21:28:06+00:00",
+  "episode_path": "docs/episodes/068.md",
+  "title": "차단된 온기",
+  "published_url": "https://novelpia.com/viewer/6197771",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -74,7 +74,8 @@
     64,
     65,
     66,
-    67
+    67,
+    68
   ],
   "unknown_result_episodes": []
 }
