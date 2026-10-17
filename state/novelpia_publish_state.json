@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 69,
-  "last_success_at": "2026-10-16T21:15:04+00:00",
-  "episode_path": "docs/episodes/069.md",
-  "title": "무효의 동선",
-  "published_url": "https://novelpia.com/viewer/6203035",
+  "last_success_episode": 70,
+  "last_success_at": "2026-10-17T20:40:43+00:00",
+  "episode_path": "docs/episodes/070.md",
+  "title": "교각의 그늘",
+  "published_url": "https://novelpia.com/viewer/6207618",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -76,7 +76,8 @@
     66,
     67,
     68,
-    69
+    69,
+    70
   ],
   "unknown_result_episodes": []
 }
