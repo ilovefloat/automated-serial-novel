@@ -4,8 +4,8 @@
   "episode_path": "docs/episodes/070.md",
   "title": "교각의 그늘",
   "published_url": "https://novelpia.com/viewer/6207618",
-  "publish_status": "published",
-  "last_error_code": "",
+  "publish_status": "failed",
+  "last_error_code": "NOVELPIA_SUBMIT_FAILED",
   "session_refresh_status": "updated",
   "published_episodes": [
     1,
