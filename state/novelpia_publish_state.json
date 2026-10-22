@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 74,
-  "last_success_at": "2026-10-21T21:47:54+00:00",
-  "episode_path": "docs/episodes/074.md",
-  "title": "틈새의 무게",
-  "published_url": "https://novelpia.com/viewer/6227424",
+  "last_success_episode": 75,
+  "last_success_at": "2026-10-22T21:51:24+00:00",
+  "episode_path": "docs/episodes/075.md",
+  "title": "노란 빛의 선",
+  "published_url": "https://novelpia.com/viewer/6231746",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -78,7 +78,8 @@
     68,
     69,
     70,
-    74
+    74,
+    75
   ],
   "unknown_result_episodes": []
 }
