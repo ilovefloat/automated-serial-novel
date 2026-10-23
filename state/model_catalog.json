@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-22T21:39:00.622192+00:00",
+  "checked_at": "2026-10-23T21:37:37.892632+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -62,7 +62,7 @@
     },
     {
       "name": "deep-research-pro-preview-12-2025",
-      "display_name": "Deep Research Pro Preview (Dec-12-2025)",
+      "display_name": "Deep Research Pro Preview (Dec-12-2025) [Rerouted]",
       "supported_actions": [
         "generateContent",
         "countTokens"
@@ -758,11 +758,20 @@
     "nano-banana-pro-preview"
   ],
   "probe_succeeded_models": [
-    "gemini-3.5-flash"
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite"
   ],
   "probe_failed_models": [],
-  "generation_failed_models": [],
-  "selected_model": "gemini-3.5-flash",
+  "generation_failed_models": [
+    {
+      "name": "gemini-3.5-flash",
+      "stage": "plan_generation",
+      "status_code": 503,
+      "reason": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+      "transient": true
+    }
+  ],
+  "selected_model": "gemini-3.5-flash-lite",
   "selection_priority": [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
@@ -833,7 +842,7 @@
     },
     {
       "name": "deep-research-pro-preview-12-2025",
-      "display_name": "Deep Research Pro Preview (Dec-12-2025)",
+      "display_name": "Deep Research Pro Preview (Dec-12-2025) [Rerouted]",
       "supported_actions": [
         "generateContent",
         "countTokens"
