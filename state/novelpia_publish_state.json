@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 75,
-  "last_success_at": "2026-10-22T21:51:24+00:00",
-  "episode_path": "docs/episodes/075.md",
-  "title": "노란 빛의 선",
-  "published_url": "https://novelpia.com/viewer/6231746",
+  "last_success_episode": 76,
+  "last_success_at": "2026-10-23T21:39:22+00:00",
+  "episode_path": "docs/episodes/076.md",
+  "title": "밖의 선",
+  "published_url": "https://novelpia.com/viewer/6236224",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -79,7 +79,8 @@
     69,
     70,
     74,
-    75
+    75,
+    76
   ],
   "unknown_result_episodes": []
 }
