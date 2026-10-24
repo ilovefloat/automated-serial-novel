@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 76,
-  "last_success_at": "2026-10-23T21:39:22+00:00",
-  "episode_path": "docs/episodes/076.md",
-  "title": "밖의 선",
-  "published_url": "https://novelpia.com/viewer/6236224",
+  "last_success_episode": 77,
+  "last_success_at": "2026-10-24T20:54:28+00:00",
+  "episode_path": "docs/episodes/077.md",
+  "title": "배수관의 입구",
+  "published_url": "https://novelpia.com/viewer/6240626",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -80,7 +80,8 @@
     70,
     74,
     75,
-    76
+    76,
+    77
   ],
   "unknown_result_episodes": []
 }
