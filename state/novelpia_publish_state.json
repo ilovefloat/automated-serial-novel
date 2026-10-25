@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 77,
-  "last_success_at": "2026-10-24T20:54:28+00:00",
-  "episode_path": "docs/episodes/077.md",
-  "title": "배수관의 입구",
-  "published_url": "https://novelpia.com/viewer/6240626",
+  "last_success_episode": 78,
+  "last_success_at": "2026-10-25T20:55:31+00:00",
+  "episode_path": "docs/episodes/078.md",
+  "title": "배수관의 침전물",
+  "published_url": "https://novelpia.com/viewer/6245587",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -81,7 +81,8 @@
     74,
     75,
     76,
-    77
+    77,
+    78
   ],
   "unknown_result_episodes": []
 }
