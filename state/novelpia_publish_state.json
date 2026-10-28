@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 80,
-  "last_success_at": "2026-10-27T15:35:42+00:00",
-  "episode_path": "docs/episodes/080.md",
-  "title": "배수관의 외곽",
-  "published_url": "https://novelpia.com/viewer/6255036",
+  "last_success_episode": 81,
+  "last_success_at": "2026-10-28T16:22:15+00:00",
+  "episode_path": "docs/episodes/081.md",
+  "title": "외곽의 아스팔트",
+  "published_url": "https://novelpia.com/viewer/6260277",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -84,7 +84,8 @@
     77,
     78,
     79,
-    80
+    80,
+    81
   ],
   "unknown_result_episodes": []
 }
