@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-29T16:25:54.464827+00:00",
+  "checked_at": "2026-10-30T16:16:33.799225+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -765,7 +765,7 @@
   "generation_failed_models": [
     {
       "name": "gemini-3.5-flash",
-      "stage": "plan_generation",
+      "stage": "body_generation",
       "status_code": 503,
       "reason": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
       "transient": true
