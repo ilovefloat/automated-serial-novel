@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 84,
-  "last_success_at": "2026-10-31T15:34:23+00:00",
-  "episode_path": "docs/episodes/084.md",
-  "title": "이면의 무게",
-  "published_url": "https://novelpia.com/viewer/6272990",
+  "last_success_episode": 85,
+  "last_success_at": "2026-11-01T16:28:19+00:00",
+  "episode_path": "docs/episodes/085.md",
+  "title": "빗자루와 합판",
+  "published_url": "https://novelpia.com/viewer/6277085",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -88,7 +88,8 @@
     81,
     82,
     83,
-    84
+    84,
+    85
   ],
   "unknown_result_episodes": []
 }
