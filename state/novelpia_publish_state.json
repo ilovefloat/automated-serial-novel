@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 85,
-  "last_success_at": "2026-11-01T16:28:19+00:00",
-  "episode_path": "docs/episodes/085.md",
-  "title": "빗자루와 합판",
-  "published_url": "https://novelpia.com/viewer/6277085",
+  "last_success_episode": 86,
+  "last_success_at": "2026-11-02T19:56:46+00:00",
+  "episode_path": "docs/episodes/086.md",
+  "title": "모퉁이의 발자국",
+  "published_url": "https://novelpia.com/viewer/6281572",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -89,7 +89,8 @@
     82,
     83,
     84,
-    85
+    85,
+    86
   ],
   "unknown_result_episodes": []
 }
