@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 86,
-  "last_success_at": "2026-11-02T19:56:46+00:00",
-  "episode_path": "docs/episodes/086.md",
-  "title": "모퉁이의 발자국",
-  "published_url": "https://novelpia.com/viewer/6281572",
+  "last_success_episode": 87,
+  "last_success_at": "2026-11-03T17:27:05+00:00",
+  "episode_path": "docs/episodes/087.md",
+  "title": "잿빛 공터의 기둥",
+  "published_url": "https://novelpia.com/viewer/6285300",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -90,7 +90,8 @@
     83,
     84,
     85,
-    86
+    86,
+    87
   ],
   "unknown_result_episodes": []
 }
