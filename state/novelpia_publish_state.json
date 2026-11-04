@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 87,
-  "last_success_at": "2026-11-03T17:27:05+00:00",
-  "episode_path": "docs/episodes/087.md",
-  "title": "잿빛 공터의 기둥",
-  "published_url": "https://novelpia.com/viewer/6285300",
+  "last_success_episode": 88,
+  "last_success_at": "2026-11-04T17:37:08+00:00",
+  "episode_path": "docs/episodes/088.md",
+  "title": "황색 점멸등",
+  "published_url": "https://novelpia.com/viewer/6289052",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -91,7 +91,8 @@
     84,
     85,
     86,
-    87
+    87,
+    88
   ],
   "unknown_result_episodes": []
 }
