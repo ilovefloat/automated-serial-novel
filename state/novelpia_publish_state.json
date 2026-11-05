@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 88,
-  "last_success_at": "2026-11-04T17:37:08+00:00",
-  "episode_path": "docs/episodes/088.md",
-  "title": "황색 점멸등",
-  "published_url": "https://novelpia.com/viewer/6289052",
+  "last_success_episode": 89,
+  "last_success_at": "2026-11-05T17:51:14+00:00",
+  "episode_path": "docs/episodes/089.md",
+  "title": "텅 빈 뼈대",
+  "published_url": "https://novelpia.com/viewer/6293101",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -92,7 +92,8 @@
     85,
     86,
     87,
-    88
+    88,
+    89
   ],
   "unknown_result_episodes": []
 }
