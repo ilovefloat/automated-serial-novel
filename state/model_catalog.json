@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-04T17:34:33.712498+00:00",
+  "checked_at": "2026-11-05T17:47:00.005281+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -534,6 +534,16 @@
       "output_token_limit": 65536
     },
     {
+      "name": "gemini-omni-1.2-flash",
+      "display_name": "Gemini Omni 1.2 Flash",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 65536
+    },
+    {
       "name": "gemini-omni-flash-preview",
       "display_name": "Gemini Omni Flash Preview",
       "supported_actions": [
@@ -697,6 +707,7 @@
     "gemini-flash-lite-latest",
     "gemini-nano-banana-2.1",
     "gemini-omni-1.1-flash",
+    "gemini-omni-1.2-flash",
     "gemini-omni-flash-preview",
     "gemini-pro-latest",
     "gemini-robotics-er-2-preview",
@@ -747,6 +758,7 @@
     "gemini-flash-lite-latest",
     "gemini-nano-banana-2.1",
     "gemini-omni-1.1-flash",
+    "gemini-omni-1.2-flash",
     "gemini-omni-flash-preview",
     "gemini-pro-latest",
     "gemini-robotics-er-2-preview",
@@ -759,19 +771,34 @@
   ],
   "probe_succeeded_models": [
     "gemini-3.5-flash",
-    "gemini-3.5-flash-lite"
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite"
   ],
   "probe_failed_models": [],
   "generation_failed_models": [
     {
       "name": "gemini-3.5-flash",
-      "stage": "body_generation",
+      "stage": "plan_generation",
+      "status_code": 503,
+      "reason": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+      "transient": true
+    },
+    {
+      "name": "gemini-3.5-flash-lite",
+      "stage": "plan_generation",
+      "status_code": 503,
+      "reason": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+      "transient": true
+    },
+    {
+      "name": "gemini-3.5-flash",
+      "stage": "plan_generation",
       "status_code": 503,
       "reason": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
       "transient": true
     }
   ],
-  "selected_model": "gemini-3.5-flash-lite",
+  "selected_model": "gemini-3.1-flash-lite",
   "selection_priority": [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
@@ -1306,6 +1333,16 @@
     {
       "name": "gemini-omni-1.1-flash",
       "display_name": "Gemini Omni 1.1 Flash",
+      "supported_actions": [
+        "generateContent",
+        "countTokens"
+      ],
+      "input_token_limit": 131072,
+      "output_token_limit": 65536
+    },
+    {
+      "name": "gemini-omni-1.2-flash",
+      "display_name": "Gemini Omni 1.2 Flash",
       "supported_actions": [
         "generateContent",
         "countTokens"
