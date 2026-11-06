@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 89,
-  "last_success_at": "2026-11-05T17:51:14+00:00",
-  "episode_path": "docs/episodes/089.md",
-  "title": "텅 빈 뼈대",
-  "published_url": "https://novelpia.com/viewer/6293101",
+  "last_success_episode": 90,
+  "last_success_at": "2026-11-06T16:59:08+00:00",
+  "episode_path": "docs/episodes/090.md",
+  "title": "웅덩이의 문장",
+  "published_url": "https://novelpia.com/viewer/6296755",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -93,7 +93,8 @@
     86,
     87,
     88,
-    89
+    89,
+    90
   ],
   "unknown_result_episodes": []
 }
