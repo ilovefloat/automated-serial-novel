@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 92,
-  "last_success_at": "2026-11-08T16:24:13+00:00",
-  "episode_path": "docs/episodes/092.md",
-  "title": "둑길",
-  "published_url": "https://novelpia.com/viewer/6304267",
+  "last_success_episode": 93,
+  "last_success_at": "2026-11-09T20:13:28+00:00",
+  "episode_path": "docs/episodes/093.md",
+  "title": "배수 구체",
+  "published_url": "https://novelpia.com/viewer/6308379",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -96,7 +96,8 @@
     89,
     90,
     91,
-    92
+    92,
+    93
   ],
   "unknown_result_episodes": []
 }
