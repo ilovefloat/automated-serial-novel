@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 93,
-  "last_success_at": "2026-11-09T20:13:28+00:00",
-  "episode_path": "docs/episodes/093.md",
-  "title": "배수 구체",
-  "published_url": "https://novelpia.com/viewer/6308379",
+  "last_success_episode": 94,
+  "last_success_at": "2026-11-10T17:25:42+00:00",
+  "episode_path": "docs/episodes/094.md",
+  "title": "서늘한 침전물",
+  "published_url": "https://novelpia.com/viewer/6311677",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -97,7 +97,8 @@
     90,
     91,
     92,
-    93
+    93,
+    94
   ],
   "unknown_result_episodes": []
 }
