@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-10T17:19:14.435821+00:00",
+  "checked_at": "2026-11-12T00:46:01.891233+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -464,6 +464,15 @@
       "output_token_limit": 32768
     },
     {
+      "name": "gemini-decision-1",
+      "display_name": "Gemini Decision 1",
+      "supported_actions": [
+        "createDecision"
+      ],
+      "input_token_limit": 262144,
+      "output_token_limit": 1
+    },
+    {
       "name": "gemini-embedding-001",
       "display_name": "Gemini Embedding 001",
       "supported_actions": [
@@ -712,6 +721,7 @@
     "gemini-3.8-live-extended-thinking",
     "gemini-4-argon",
     "gemini-4-carbon",
+    "gemini-decision-1",
     "gemini-embedding-001",
     "gemini-embedding-2",
     "gemini-embedding-2-preview",
@@ -783,35 +793,11 @@
     "nano-banana-pro-preview"
   ],
   "probe_succeeded_models": [
-    "gemini-3.5-flash",
-    "gemini-3.5-flash-lite",
-    "gemini-3.1-flash-lite"
+    "gemini-3.5-flash"
   ],
   "probe_failed_models": [],
-  "generation_failed_models": [
-    {
-      "name": "gemini-3.5-flash",
-      "stage": "plan_generation",
-      "status_code": 503,
-      "reason": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
-      "transient": true
-    },
-    {
-      "name": "gemini-3.5-flash-lite",
-      "stage": "body_generation",
-      "status_code": 503,
-      "reason": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
-      "transient": true
-    },
-    {
-      "name": "gemini-3.5-flash",
-      "stage": "body_generation",
-      "status_code": 503,
-      "reason": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
-      "transient": true
-    }
-  ],
-  "selected_model": "gemini-3.1-flash-lite",
+  "generation_failed_models": [],
+  "selected_model": "gemini-3.5-flash",
   "selection_priority": [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
@@ -1282,6 +1268,15 @@
       ],
       "input_token_limit": 1048576,
       "output_token_limit": 32768
+    },
+    {
+      "name": "gemini-decision-1",
+      "display_name": "Gemini Decision 1",
+      "supported_actions": [
+        "createDecision"
+      ],
+      "input_token_limit": 262144,
+      "output_token_limit": 1
     },
     {
       "name": "gemini-embedding-001",
