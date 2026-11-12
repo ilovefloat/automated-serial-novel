@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 94,
-  "last_success_at": "2026-11-10T17:25:42+00:00",
-  "episode_path": "docs/episodes/094.md",
-  "title": "서늘한 침전물",
-  "published_url": "https://novelpia.com/viewer/6311677",
+  "last_success_episode": 95,
+  "last_success_at": "2026-11-12T00:48:03+00:00",
+  "episode_path": "docs/episodes/095.md",
+  "title": "4분 간격",
+  "published_url": "https://novelpia.com/viewer/6315846",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -98,7 +98,8 @@
     91,
     92,
     93,
-    94
+    94,
+    95
   ],
   "unknown_result_episodes": []
 }
