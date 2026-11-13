@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 96,
-  "last_success_at": "2026-11-12T17:50:58+00:00",
-  "episode_path": "docs/episodes/096.md",
-  "title": "거더 하부",
-  "published_url": "https://novelpia.com/viewer/6319057",
+  "last_success_episode": 97,
+  "last_success_at": "2026-11-13T17:26:24+00:00",
+  "episode_path": "docs/episodes/097.md",
+  "title": "붉은 스캔선",
+  "published_url": "https://novelpia.com/viewer/6322624",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -100,7 +100,8 @@
     93,
     94,
     95,
-    96
+    96,
+    97
   ],
   "unknown_result_episodes": []
 }
