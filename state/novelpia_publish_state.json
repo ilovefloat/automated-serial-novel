@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 98,
-  "last_success_at": "2026-11-14T16:10:58+00:00",
-  "episode_path": "docs/episodes/098.md",
-  "title": "개구부",
-  "published_url": "https://novelpia.com/viewer/6326029",
+  "last_success_episode": 99,
+  "last_success_at": "2026-11-15T16:39:54+00:00",
+  "episode_path": "docs/episodes/099.md",
+  "title": "덤불 경계",
+  "published_url": "https://novelpia.com/viewer/6330232",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -102,7 +102,8 @@
     95,
     96,
     97,
-    98
+    98,
+    99
   ],
   "unknown_result_episodes": []
 }
