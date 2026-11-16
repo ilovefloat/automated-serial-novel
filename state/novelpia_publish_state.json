@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 99,
-  "last_success_at": "2026-11-15T16:39:54+00:00",
-  "episode_path": "docs/episodes/099.md",
-  "title": "덤불 경계",
-  "published_url": "https://novelpia.com/viewer/6330232",
+  "last_success_episode": 100,
+  "last_success_at": "2026-11-16T19:57:03+00:00",
+  "episode_path": "docs/episodes/100.md",
+  "title": "폐정류장",
+  "published_url": "https://novelpia.com/viewer/6334434",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -103,7 +103,8 @@
     96,
     97,
     98,
-    99
+    99,
+    100
   ],
   "unknown_result_episodes": []
 }
