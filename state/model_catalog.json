@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-17T18:46:24.823021+00:00",
+  "checked_at": "2026-11-18T18:25:44.218790+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -806,11 +806,34 @@
     "nano-banana-pro-preview"
   ],
   "probe_succeeded_models": [
-    "gemini-3.5-flash"
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite"
   ],
-  "probe_failed_models": [],
-  "generation_failed_models": [],
-  "selected_model": "gemini-3.5-flash",
+  "probe_failed_models": [
+    {
+      "name": "gemini-3.5-flash",
+      "status_code": 503,
+      "reason": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+      "transient": true
+    }
+  ],
+  "generation_failed_models": [
+    {
+      "name": "gemini-3.5-flash-lite",
+      "stage": "plan_generation",
+      "status_code": 503,
+      "reason": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+      "transient": true
+    },
+    {
+      "name": "gemini-3.5-flash",
+      "stage": "plan_fallback_probe",
+      "status_code": 503,
+      "reason": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+      "transient": true
+    }
+  ],
+  "selected_model": "gemini-3.1-flash-lite",
   "selection_priority": [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
