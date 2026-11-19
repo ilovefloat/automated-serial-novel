@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-18T18:25:44.218790+00:00",
+  "checked_at": "2026-11-19T18:42:02.393662+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -475,6 +475,17 @@
       "output_token_limit": 65536
     },
     {
+      "name": "gemini-4-neon",
+      "display_name": "Gemini 4 Neon",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
       "name": "gemini-decision-1",
       "display_name": "Gemini Decision 1",
       "supported_actions": [
@@ -638,6 +649,15 @@
       "output_token_limit": 32768
     },
     {
+      "name": "genie-4",
+      "display_name": "Genie 4",
+      "supported_actions": [
+        "bidiGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
       "name": "lyria-3-clip-preview",
       "display_name": "Lyria 3 Clip Preview",
       "supported_actions": [
@@ -733,6 +753,7 @@
     "gemini-4-argon",
     "gemini-4-carbon",
     "gemini-4-hydrogen",
+    "gemini-4-neon",
     "gemini-decision-1",
     "gemini-embedding-001",
     "gemini-embedding-2",
@@ -748,6 +769,7 @@
     "gemini-robotics-er-2-streaming-preview",
     "gemma-4-26b-a4b-it",
     "gemma-4-31b-it",
+    "genie-4",
     "lyria-3-clip-preview",
     "lyria-3-pro-preview",
     "lyria-3.5",
@@ -790,6 +812,7 @@
     "gemini-4-argon",
     "gemini-4-carbon",
     "gemini-4-hydrogen",
+    "gemini-4-neon",
     "gemini-flash-latest",
     "gemini-flash-lite-latest",
     "gemini-nano-banana-2.1",
@@ -1317,6 +1340,17 @@
       "output_token_limit": 65536
     },
     {
+      "name": "gemini-4-neon",
+      "display_name": "Gemini 4 Neon",
+      "supported_actions": [
+        "generateContent",
+        "countTokens",
+        "batchGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
+    },
+    {
       "name": "gemini-decision-1",
       "display_name": "Gemini Decision 1",
       "supported_actions": [
@@ -1478,6 +1512,15 @@
       ],
       "input_token_limit": 262144,
       "output_token_limit": 32768
+    },
+    {
+      "name": "genie-4",
+      "display_name": "Genie 4",
+      "supported_actions": [
+        "bidiGenerateContent"
+      ],
+      "input_token_limit": 1048576,
+      "output_token_limit": 65536
     },
     {
       "name": "lyria-3-clip-preview",
