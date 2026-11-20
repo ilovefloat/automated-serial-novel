@@ -618,6 +618,12 @@
       "title": "노란색 선",
       "date": "2026-11-19",
       "file": "episodes/103.md"
+    },
+    {
+      "episode": 104,
+      "title": "배수 구체",
+      "date": "2026-11-20",
+      "file": "episodes/104.md"
     }
   ]
 }
