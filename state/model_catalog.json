@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-20T18:02:03.999197+00:00",
+  "checked_at": "2026-11-21T16:58:31.468924+00:00",
   "models": [
     {
       "name": "antigravity-preview-05-2026",
@@ -53,16 +53,6 @@
     {
       "name": "deep-research-preview-04-2026",
       "display_name": "Deep Research Preview (Apr-21-2026)",
-      "supported_actions": [
-        "generateContent",
-        "countTokens"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 65536
-    },
-    {
-      "name": "deep-research-pro-preview-12-2025",
-      "display_name": "Deep Research Pro Preview (Dec-12-2025) [Rerouted]",
       "supported_actions": [
         "generateContent",
         "countTokens"
@@ -715,7 +705,6 @@
     "aqa",
     "deep-research-max-preview-04-2026",
     "deep-research-preview-04-2026",
-    "deep-research-pro-preview-12-2025",
     "gemini-2.5-computer-use-preview-10-2025",
     "gemini-2.5-flash",
     "gemini-2.5-flash-image",
@@ -782,7 +771,6 @@
     "antigravity-preview-latest",
     "deep-research-max-preview-04-2026",
     "deep-research-preview-04-2026",
-    "deep-research-pro-preview-12-2025",
     "gemini-2.5-computer-use-preview-10-2025",
     "gemini-2.5-flash",
     "gemini-2.5-flash-image",
@@ -895,16 +883,6 @@
     {
       "name": "deep-research-preview-04-2026",
       "display_name": "Deep Research Preview (Apr-21-2026)",
-      "supported_actions": [
-        "generateContent",
-        "countTokens"
-      ],
-      "input_token_limit": 1048576,
-      "output_token_limit": 65536
-    },
-    {
-      "name": "deep-research-pro-preview-12-2025",
-      "display_name": "Deep Research Pro Preview (Dec-12-2025) [Rerouted]",
       "supported_actions": [
         "generateContent",
         "countTokens"
