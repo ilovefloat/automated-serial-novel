@@ -1,9 +1,9 @@
 {
-  "last_success_episode": 105,
-  "last_success_at": "2026-11-21T17:01:41+00:00",
-  "episode_path": "docs/episodes/105.md",
-  "title": "노란 선 밖",
-  "published_url": "https://novelpia.com/viewer/6351647",
+  "last_success_episode": 106,
+  "last_success_at": "2026-11-22T17:27:37+00:00",
+  "episode_path": "docs/episodes/106.md",
+  "title": "덤불 틈새",
+  "published_url": "https://novelpia.com/viewer/6355186",
   "publish_status": "published",
   "last_error_code": "",
   "session_refresh_status": "updated",
@@ -109,7 +109,8 @@
     102,
     103,
     104,
-    105
+    105,
+    106
   ],
   "unknown_result_episodes": []
 }
