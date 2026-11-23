@@ -4,8 +4,8 @@
   "episode_path": "docs/episodes/106.md",
   "title": "덤불 틈새",
   "published_url": "https://novelpia.com/viewer/6355186",
-  "publish_status": "published",
-  "last_error_code": "",
+  "publish_status": "failed",
+  "last_error_code": "NOVELPIA_SUBMIT_FAILED",
   "session_refresh_status": "updated",
   "published_episodes": [
     1,
